@@ -1,0 +1,28 @@
+{
+  "name": "@arcstar/credibility",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build",
+    "lint": "eslint src && node ../../scripts/check-purity.mjs .",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@arcstar/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@fast-check/vitest": "^0.5.0"
+  }
+}
