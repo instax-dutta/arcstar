@@ -27,6 +27,12 @@ These bind this package and cannot be weakened by any child document.
   forbidden, because it lets weak corroboration rescue a weak source, which is the exact
   failure this project exists to prevent.
 - `base` is the BEST independent source tier, not an average across tiers.
+- Contradiction is supplied by the caller as pre-scored `ContradictingClaim` items and
+  collapsed to the MAX score per distinct `reason`. Do not reintroduce a formula that grows
+  a group's divisor with its size: `total / (1 + ln(1+n))` was non-monotonic and let an
+  attacker raise a claim's score by repeating a refutation of it.
+- The contradiction penalty is capped at 0.5 (`MAX_CONTRADICTION_PENALTY`). This is what
+  guarantees INVARIANT 8. Lowering the cap must be a deliberate, documented change.
 - Every score ships a full `ScoreExplanation`. A score that cannot be explained must not
   exist.
 - Scores are descriptive, never predictive. Do not add anything that reads as a forecast.
@@ -54,7 +60,7 @@ These bind this package and cannot be weakened by any child document.
 
 ## Verification
 
-- `pnpm --filter @arcstar/credibility test` - 47 tests including 16 property-based
+- `pnpm --filter @arcstar/credibility test` - 72 tests including 23 property-based
   invariants, each running 200 cases, with a 100% coverage gate on all four metrics.
 - `pnpm --filter @arcstar/credibility lint` - runs ESLint AND the purity gate. Both must
   pass.

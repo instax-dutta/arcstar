@@ -137,12 +137,32 @@ system, and it is what nobody else does.
 
 ### 3.3 Contradiction
 
+Contradicting claims are supplied by the caller as pre-scored items, each with the
+proposition it disputes. Repetition of one counter-claim is collapsed to its strongest form.
+
 ```
-contradictionPenalty = sum over contradicting claims of theirScore / (1 + log(1 + n))
-score' = score * (1 - min(0.5, contradictionPenalty))
+groupMax    = max(score) over contradicting claims sharing the same reason
+penalty     = sum of groupMax across distinct reasons
+score'      = score * (1 - min(0.5, penalty))
 ```
 
 Capped at 50% so a strong claim is never fully destroyed by weak contradicting noise.
+Distinct `reason` values are treated as genuinely separate objections and accumulate in full.
+
+**Correction to this plan.** The original formulation was
+`sum over groups of (groupTotal / (1 + ln(1 + n)))`, intended to damp repetition. That
+formula is provably non-monotonic: for a group of total `T` and size `n`, adding one item
+grows the denominator faster than the numerator, so the penalty can fall.
+
+```
+n=1, T=1.35    penalty = 1.3500 / 1.6931 = 0.7973
+n=2, T=1.3501  penalty = 1.3501 / 2.0986 = 0.6433   <-- penalty DROPPED
+```
+
+Adding contradiction evidence made the score *higher*, which means an attacker could raise
+a claim's credibility by repeating a refutation of it. Taking the max per group is monotonic
+by construction, is order invariant, and still collapses repetition: ten repeats of one
+counter-claim cost the same as one, while ten distinct objections accumulate in full.
 
 ### 3.4 The LLM boundary (important)
 
@@ -435,27 +455,30 @@ logic is proven by tests first.
 ## 11. Build status
 
 ### Phase 0 - Foundations: COMPLETE
-### Phase 1 - Credibility core: PARTIAL
+### Phase 1 - Credibility core: COMPLETE
 
-Done and verified: `pnpm run check` green (7/7 turbo tasks), 65 tests total, 100% coverage
-on statements, branches, functions, and lines in both packages, purity gate verified in
-both directions (passes clean code, fails injected violations).
+Done and verified: `pnpm run check` green, 90 tests total, 100% coverage on statements,
+branches, functions, and lines in both packages, purity gate verified in both directions
+(passes clean code, fails injected violations).
 
-Delivered so far:
+Delivered:
 
 - Monorepo, turbo pipeline, shared lint config, CI with nightly benchmark hook.
 - `packages/contracts` - all Zod schemas and cross-field validation (18 tests).
-- `packages/credibility/src/independence.ts` - cascade detection (14 example tests,
-  8 property invariants).
-- `packages/credibility/src/score.ts` - gate composition and explainability (33 example
-  tests, 8 property invariants).
+- `packages/credibility/src/independence.ts` - cascade detection (8 property invariants).
+- `packages/credibility/src/score.ts` - gate composition and explainability
+  (8 property invariants).
+- `packages/credibility/src/contradiction.ts` - contradiction penalty and the 0.5 cap
+  (7 property invariants).
 - `scripts/check-purity.mjs` - the purity gate.
 
-Invariants from §4.2 that are now enforced: 1, 2, 3, 4, 5, 6, 7, 9, 10. That is 9 of 10.
+23 property-based invariants in total, each running 200 generated cases.
 
-**Invariant 8 (contradiction cap) is NOT yet implemented.** `scoreClaim` currently returns
-an empty `contradiction` array because contradiction scoring (§3.3) has not been built.
-Phase 1 is not complete until it is, and until then no score may be treated as final.
+All ten invariants from §4.2 are now enforced: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
+Contradiction handling in §3.3 is live and `scoreClaim` no longer returns an empty
+`contradiction` array. Scores are final for methodology version `credibility@1.0.0`.
+
+Not yet done: `__fixtures__/golden/` score snapshots, then Phase 2 (graph).
 
 ### Corrections to this plan found during Phase 0/1
 
@@ -468,12 +491,15 @@ Recorded here because they change the specification, not just the implementation
    counted under both, so per-origin counts are correct while their sum exceeds the
    supporting count. Both facts were found by property-based testing and are pinned in
    regression tests.
-3. **Deleted-source limitation.** A source citing an unresolvable (deleted) source is
+3. **§3.3 contradiction formula was non-monotonic.** `total / (1 + ln(1+n))` let appending
+   evidence *reduce* the penalty, so repeating a refutation raised a claim's score.
+   Replaced with max-per-distinct-reason, which is monotonic by construction. See §3.3.
+4. **Deleted-source limitation.** A source citing an unresolvable (deleted) source is
    treated as an origin. We do not collapse on an unobservable shared root, because that
    would fabricate evidence. This can overstate corroboration and is a known gap to close
    by surfacing "provenance incomplete" in the explanation layer.
 
-### Next: finish Phase 1
+### Next
 
-Implement §3.3 contradiction scoring and invariant 8, then add `__fixtures__/golden/` with
-frozen score snapshots before moving to Phase 2.
+1. Add `__fixtures__/golden/` with frozen score snapshots, per §4.3.
+2. Phase 2: `packages/graph/` - blast radius, min-cut, ranking. UI-free and API-free.
