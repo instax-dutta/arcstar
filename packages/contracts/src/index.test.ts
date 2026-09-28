@@ -1,0 +1,172 @@
+import { describe, expect, it } from "vitest";
+import {
+  ClaimSchema,
+  EdgeSchema,
+  NodeSchema,
+  ScoreSchema,
+  SourceSchema,
+  type Claim,
+  type Source,
+} from "./index.js";
+
+/**
+ * Spec source: PLAN.md section 3.1 (core types) and 3.5 (explainability).
+ * These tests encode the contract. They are written before the schemas.
+ */
+
+const VALID_SOURCE: Source = {
+  id: "src-reuters-1",
+  publisher: "Reuters",
+  tier: 1,
+  publishedAt: new Date("2026-03-01T08:00:00Z"),
+  citesSourceIds: [],
+};
+
+const VALID_CLAIM: Claim = {
+  id: "clm-1",
+  text: "Transit through the Strait of Hormuz fell 40% in March.",
+  subjectNodeId: "node-hormuz",
+  assertedAt: new Date("2026-03-02T00:00:00Z"),
+  supportingSourceIds: ["src-reuters-1"],
+  contradictingSourceIds: [],
+  extractionConfidence: 0.9,
+};
+
+describe("SourceSchema", () => {
+  it("accepts a well-formed source", () => {
+    expect(SourceSchema.parse(VALID_SOURCE)).toEqual(VALID_SOURCE);
+  });
+
+  it("rejects a tier outside 1..5", () => {
+    expect(() => SourceSchema.parse({ ...VALID_SOURCE, tier: 0 })).toThrow();
+    expect(() => SourceSchema.parse({ ...VALID_SOURCE, tier: 6 })).toThrow();
+    expect(() => SourceSchema.parse({ ...VALID_SOURCE, tier: 2.5 })).toThrow();
+  });
+
+  it("requires a non-empty id and publisher", () => {
+    expect(() => SourceSchema.parse({ ...VALID_SOURCE, id: "" })).toThrow();
+    expect(() => SourceSchema.parse({ ...VALID_SOURCE, publisher: "  " })).toThrow();
+  });
+
+  it("rejects a self-referential citation", () => {
+    expect(() =>
+      SourceSchema.parse({ ...VALID_SOURCE, citesSourceIds: ["src-reuters-1"] }),
+    ).toThrow();
+  });
+
+  it("treats primaryEvidence as optional", () => {
+    const { primaryEvidence: _dropped, ...withoutEvidence } = VALID_SOURCE;
+    expect(SourceSchema.parse(withoutEvidence)).toEqual(withoutEvidence);
+  });
+});
+
+describe("ClaimSchema", () => {
+  it("accepts a well-formed claim", () => {
+    expect(ClaimSchema.parse(VALID_CLAIM)).toEqual(VALID_CLAIM);
+  });
+
+  it("requires extractionConfidence within 0..1", () => {
+    expect(() =>
+      ClaimSchema.parse({ ...VALID_CLAIM, extractionConfidence: -0.1 }),
+    ).toThrow();
+    expect(() => ClaimSchema.parse({ ...VALID_CLAIM, extractionConfidence: 1.1 })).toThrow();
+  });
+
+  it("accepts the boundary values 0 and 1 for extractionConfidence", () => {
+    expect(ClaimSchema.parse({ ...VALID_CLAIM, extractionConfidence: 0 }).extractionConfidence).toBe(0);
+    expect(ClaimSchema.parse({ ...VALID_CLAIM, extractionConfidence: 1 }).extractionConfidence).toBe(1);
+  });
+
+  it("rejects a claim that lists the same source as support and contradiction", () => {
+    expect(() =>
+      ClaimSchema.parse({
+        ...VALID_CLAIM,
+        contradictingSourceIds: ["src-reuters-1"],
+      }),
+    ).toThrow();
+  });
+});
+
+describe("ScoreSchema", () => {
+  it("rejects scores above the documented ceiling of 1.35", () => {
+    expect(() => ScoreSchema.parse({ value: 1.35, methodVersion: "credibility@1.0.0" })).not.toThrow();
+    expect(() => ScoreSchema.parse({ value: 1.36, methodVersion: "credibility@1.0.0" })).toThrow();
+  });
+
+  it("rejects negative scores", () => {
+    expect(() => ScoreSchema.parse({ value: -0.01, methodVersion: "credibility@1.0.0" })).toThrow();
+  });
+
+  it("requires a methodVersion so scores stay auditable over time", () => {
+    expect(() => ScoreSchema.parse({ value: 0.5 })).toThrow();
+    expect(() => ScoreSchema.parse({ value: 0.5, methodVersion: "" })).toThrow();
+  });
+});
+
+describe("NodeSchema", () => {
+  it("accepts a well-formed node", () => {
+    const node = {
+      id: "node-hormuz",
+      type: "chokepoint",
+      label: "Strait of Hormuz",
+      props: { capacityMbd: 20 },
+    };
+    expect(NodeSchema.parse(node)).toEqual(node);
+  });
+
+  it("rejects an unknown node type", () => {
+    expect(() =>
+      NodeSchema.parse({ id: "n1", type: "spaceship", label: "x", props: {} }),
+    ).toThrow();
+  });
+});
+
+describe("EdgeSchema", () => {
+  it("accepts a well-formed edge and keeps the asOf date", () => {
+    const edge = {
+      from: "node-qatar",
+      to: "node-hormuz",
+      relation: "transits_through",
+      weight: 0.8,
+      asOf: new Date("2026-01-01T00:00:00Z"),
+    };
+    const parsed = EdgeSchema.parse(edge);
+    expect(parsed.asOf).toBeInstanceOf(Date);
+    expect(parsed.asOf.toISOString()).toBe("2026-01-01T00:00:00.000Z");
+  });
+
+  it("rejects an unknown relation type", () => {
+    expect(() =>
+      EdgeSchema.parse({
+        from: "a",
+        to: "b",
+        relation: "vibes_with",
+        weight: 1,
+        asOf: new Date(),
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a self-loop", () => {
+    expect(() =>
+      EdgeSchema.parse({
+        from: "node-hormuz",
+        to: "node-hormuz",
+        relation: "depends_on",
+        weight: 1,
+        asOf: new Date(),
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a weight outside 0..1", () => {
+    const base = {
+      from: "a",
+      to: "b",
+      relation: "depends_on" as const,
+      asOf: new Date(),
+    };
+    expect(() => EdgeSchema.parse({ ...base, weight: 1.01 })).toThrow();
+    expect(() => EdgeSchema.parse({ ...base, weight: -0.01 })).toThrow();
+  });
+});
