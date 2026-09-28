@@ -1,0 +1,150 @@
+# DOX framework
+
+- DOX is highly performant AGENTS.md hierarchy installed here
+- Agent must follow DOX instructions across any edits
+
+## Project
+
+- Name: Arcstar
+- Purpose: Open-source geopolitical intelligence. Credibility scoring as infrastructure, dependency graph as the interface.
+- Answers: "if X happens, what breaks, ranked, and how confident are we in each link."
+- Status: Planning complete, zero code written. See PLAN.md for the governing build plan.
+- License: AGPL-3.0. Free and open, no accounts, no paywall.
+
+## Project-Wide Contracts
+
+These bind every subtree and no child AGENTS.md may weaken them. PLAN.md holds the full
+rationale, phases, and acceptance criteria; this section is the short enforcement list.
+
+- `packages/credibility` is pure: no I/O, no DB, no network, no clock. Time is injected.
+  A lint rule enforces this in CI. If a scoring function needs `Date.now()`, the design
+  is wrong.
+- The LLM never produces a credibility score. It only performs claim extraction and
+  entity linking. All scoring is deterministic arithmetic over validated inputs.
+- The ten credibility invariants in PLAN.md section 4.2 are the product, not the test
+  suite. If any breaks, the score is unsound and nothing ships.
+- Cascade collapse is the core innovation: N sources citing one root count as 1.
+- Scores are descriptive, never predictive, and every score is explainable. Errors are
+  surfaced, not hidden.
+- Phase gates hold. Phases 1 and 2 are UI-free and API-free. Do not wire the engine to
+  a UI before its logic is proven by tests.
+- The benchmark (PLAN.md section 6.1) is the go/no-go gate for the whole project.
+
+## Core Contract
+
+- AGENTS.md files are binding work contracts for their subtrees
+- Work products, source materials, instructions, records, assets, and durable docs must stay understandable from the nearest applicable AGENTS.md plus every parent AGENTS.md above it
+
+## Read Before Editing
+
+1. Read the root AGENTS.md
+2. Identify every file or folder you expect to touch
+3. Walk from the repository root to each target path
+4. Read every AGENTS.md found along each route
+5. If a parent AGENTS.md lists a child AGENTS.md whose scope contains the path, read that child and continue from there
+6. Use the nearest AGENTS.md as the local contract and parent docs for repo-wide rules
+7. If docs conflict, the closer doc controls local work details, but no child doc may weaken DOX
+
+Do not rely on memory. Re-read the applicable DOX chain in the current session before editing.
+
+## Update After Editing
+
+Every meaningful change requires a DOX pass before the task is done.
+
+Update the closest owning AGENTS.md when a change affects:
+
+- purpose, scope, ownership, or responsibilities
+- durable structure, contracts, workflows, or operating rules
+- required inputs, outputs, permissions, constraints, side effects, or artifacts
+- user preferences about behavior, communication, process, organization, or quality
+- AGENTS.md creation, deletion, move, rename, or index contents
+
+Update parent docs when parent-level structure, ownership, workflow, or child index changes. Update child docs when parent changes alter local rules. Remove stale or contradictory text immediately. Small edits that do not change behavior or contracts may leave docs unchanged, but the DOX pass still must happen.
+
+## Hierarchy
+
+- Root AGENTS.md is the DOX rail: project-wide instructions, global preferences, durable workflow rules, and the top-level Child DOX Index
+- Child AGENTS.md files own domain-specific instructions and their own Child DOX Index
+- Each parent explains what its direct children cover and what stays owned by the parent
+- The closer a doc is to the work, the more specific and practical it must be
+
+## Child Doc Shape
+
+- Create a child AGENTS.md when a folder becomes a durable boundary with its own purpose, rules, responsibilities, workflow, materials, or quality standards
+- Work Guidance must reflect the current standards of the project or user instructions; if there are no specific standards or instructions yet, leave it empty
+- Verification must reflect an existing check; if no verification framework exists yet, leave it empty and update it when one exists
+
+Default section order:
+- Purpose
+- Ownership
+- Local Contracts
+- Work Guidance
+- Verification
+- Child DOX Index
+
+## Style
+
+- Keep docs concise, current, and operational
+- Document stable contracts, not diary entries
+- Put broad rules in parent docs and concrete details in child docs
+- Prefer direct bullets with explicit names
+- Do not duplicate rules across many files unless each scope needs a local version
+- Delete stale notes instead of explaining history
+- Trim obvious statements, repeated rules, misplaced detail, and warnings for risks that no longer exist
+
+## Closeout
+
+1. Re-check changed paths against the DOX chain
+2. Update nearest owning docs and any affected parents or children
+3. Refresh every affected Child DOX Index
+4. Remove stale or contradictory text
+5. Run existing verification when relevant
+6. Report any docs intentionally left unchanged and why
+
+## User Preferences
+
+When the user requests a durable behavior change, record it here or in the relevant child AGENTS.md
+
+## Child DOX Index
+
+Two child DOX files exist. Both are leaf packages under `packages/`.
+
+- `packages/contracts/AGENTS.md` - Zod schemas shared by engine, API, and web. Changing a
+  schema is a breaking change across all three consumers.
+- `packages/credibility/AGENTS.md` - the moat. Pure scoring, cascade detection,
+  contradictions, explainability. Owns the purity contract and the ten invariants.
+
+Supporting layout that is NOT a DOX boundary:
+
+- `packages/graph/` - does not exist yet. It is created in Phase 2 with a child
+  `AGENTS.md` at the same time. An empty package was scaffolded during Phase 0 and removed
+  because it broke lint; do not recreate a placeholder.
+- `scripts/check-purity.mjs` - the purity gate. Owned by the root rail, not a child DOX.
+
+### Planned boundaries (create AGENTS.md when the folder is first committed)
+
+Each of these is a durable boundary per PLAN.md section 2. When one is created, add a
+child `AGENTS.md` with the standard section order and add it to this index.
+
+| Planned path | Scope it will own |
+|---|---|
+| `packages/graph/` | Dependency graph types, blast radius, min-cut, severity ranking. Cycle safety and stable ordering are contracts. |
+| `apps/api/` | Hono server, ingest endpoints, cron. Adapters use recorded fixtures, never live network in CI. |
+| `apps/web/` | Vite + React + Sigma.js. Product surface only, no scoring logic may live here. |
+| `evals/` | The 300-claim labelled benchmark. AUC >= 0.80 is the project go/no-go gate. |
+
+### Intentionally skipped
+
+- No nested DOX depth beyond one level. The layout is shallow by design; prefer keeping
+  it that way rather than adding depth to mirror directory count.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->
