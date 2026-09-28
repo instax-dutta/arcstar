@@ -291,38 +291,63 @@ Edges are **as-of dated**. This matters: the Russia-Ukraine gas relationship has
 start and an end. Blast radius is computed on the graph as it stood at a given date, so
 we can ask "what depended on this in March 2022" and "what depends on it now."
 
-### 5.1 Blast radius
+### 5.0 Relation direction (not specified in the original plan)
+
+An edge `A depends_on B` means A breaks when B breaks, so impact travels B -> A. An edge
+`A produces B` means B breaks when A breaks, so impact travels A -> B. The same stored
+edge direction means opposite things for different relations, and a traversal that
+ignores this produces confident nonsense: it would report that shutting the oil market
+endangered the producer rather than its consumers.
+
+The table lives in `packages/graph/src/blast.ts` as `PROPAGATION` and is pinned by tests
+in both directions wherever direction is meaningful.
+
+| Relation | Direction | Reasoning |
+|---|---|---|
+| `depends_on` | reverse | A breaks when B breaks |
+| `transits_through` | reverse | Closing B stops A |
+| `consumes` | reverse | Losing B hurts A |
+| `located_in` | reverse | Disruption in B reaches A |
+| `supplies` | forward | B depends on A, so A breaking hurts B |
+| `produces` | forward | A breaking stops B |
+| `owns` | forward | A breaking endangers B |
+| `sanctions` | none | A tightening and a relaxation push opposite ways; guessing would manufacture a blast radius nobody can defend |
+
+### 5.1 Blast radius - IMPLEMENTED
 
 The core product query: **"if node X is disrupted, what breaks?"**
 
 ```
-blastRadius(graph, disruptedNode, { maxHops: 3, decay: 0.6 })
+blastRadius(graph, disruptedNode, { maxHops: 3, decay: 0.6, ceiling: 1 })
   -> [{ node, hops, impactScore, path: NodeId[] }]  // sorted desc by impactScore
 ```
 
-- Follow only *reversed* dependency edges - if `A depends_on X`, disrupting X affects A.
-- `impactScore = weight * decay^hops`, summed across all paths to the same node.
-- Cycle-safe via visited set. This is a property-tested invariant (no infinite
-  traversal, no duplicate paths inflating scores).
+- Impact travels along the direction `PROPAGATION` specifies, not uniformly along stored
+  edges.
+- `impactScore = sum over paths of (weight * decay^hops)`, so a node reachable several ways
+  scores higher, and decay applies from the first hop onward.
+- `maxHops` bounds the path count. This is what makes a cyclic graph tractable: finitely
+  many hops means finitely many paths.
+- Cycle-safe: a path may not revisit a node in its own chain.
+- The disrupted node is excluded from its own results.
+- Ordered by descending impact, then ascending node id as a stable tiebreak.
 
-### 5.2 Min-cut
+### 5.2 Min-cut - NOT YET IMPLEMENTED
 
 Single points of failure are the most valuable insight a graph can give.
 `criticalChokepoints(graph)` finds edges whose removal most increases partition count.
 Exponentially hard in general - we run bounded k (k <= 3) with a hard time budget, and
-**the time budget is part of the contract**, tested by a property that asserts it
-returns within budget on pathological input. Returns partial results with a
-`complete: false` flag rather than hanging.
+**the time budget is part of the contract**, tested by a property that asserts it returns
+within budget on pathological input. Returns partial results with a `complete: false` flag
+rather than hanging.
 
-### 5.3 Ranking
+### 5.3 Ranking - DEFERRED, blast radius scores rank directly
 
-Severity ranking is `PageRank`-ish on the subgraph, which handles the fact that being
-downstream of ten things is worse than being downstream of one thing through a heavy
-edge. Ordering must be **stable** across equal scores - a property test asserts this,
-because unstable ordering in the UI is immediately visible and immediately corrosive
-to trust.
-
----
+Severity ranking uses the blast radius `impactScore` directly for v1 rather than
+PageRank. A separate PageRank pass is deferred: on a curated node set of a few hundred
+entities the direct multi-path impact score is more explainable to a user, and
+explainability is a harder requirement here than a marginally better ranking. If
+benchmark data later shows the direct score ranks poorly, revisit.
 
 ## 6. Falsifiable acceptance criteria
 
@@ -467,31 +492,34 @@ logic is proven by tests first.
 
 ### Phase 0 - Foundations: COMPLETE
 ### Phase 1 - Credibility core: COMPLETE
+### Phase 2 - Graph core: PARTIAL (blast radius done, min-cut deferred)
 
-Done and verified: `pnpm run check` green, 90 tests total, 100% coverage on statements,
-branches, functions, and lines in both packages, purity gate verified in both directions
-(passes clean code, fails injected violations).
+Verified: `pnpm run check` green (10/10 turbo tasks), 146 tests, 100% coverage on
+statements, branches, functions, and lines in all three packages, purity gate verified in
+both directions.
 
 Delivered:
 
 - Monorepo, turbo pipeline, shared lint config, CI with nightly benchmark hook.
 - `packages/contracts` - all Zod schemas and cross-field validation (18 tests).
-- `packages/credibility/src/independence.ts` - cascade detection (8 property invariants).
-- `packages/credibility/src/score.ts` - gate composition and explainability
-  (8 property invariants).
-- `packages/credibility/src/contradiction.ts` - contradiction penalty and the 0.5 cap
-  (7 property invariants).
+- `packages/credibility` - cascade detection, score composition, contradiction
+  (86 tests, 23 property invariants, 10 golden snapshots).
+- `packages/graph` - blast radius with relation-aware propagation (42 tests, 6 property
+  invariants).
 - `scripts/check-purity.mjs` - the purity gate.
 
-23 property-based invariants in total, each running 200 generated cases.
+All ten invariants from §4.2 are enforced. Scores are final for methodology version
+`credibility@1.0.0`.
 
-All ten invariants from §4.2 are now enforced: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
-Contradiction handling in §3.3 is live and `scoreClaim` no longer returns an empty
-`contradiction` array. Scores are final for methodology version `credibility@1.0.0`.
+Not yet done:
 
-Not yet done: `__fixtures__/golden/` score snapshots, then Phase 2 (graph).
+- §5.2 min-cut (`criticalChokepoints`).
+- As-of-dated edge filtering at query time. Edges carry `asOf`, but `blastRadius`
+  currently ignores it and treats the whole edge list as one snapshot. Honouring the date
+  is required before the "what depended on this in March 2022" question can be answered.
+- `__fixtures__/golden/` for the graph package.
 
-### Corrections to this plan found during Phase 0/1
+### Corrections to this plan found during Phase 0-2
 
 Recorded here because they change the specification, not just the implementation.
 
@@ -505,12 +533,17 @@ Recorded here because they change the specification, not just the implementation
 3. **§3.3 contradiction formula was non-monotonic.** `total / (1 + ln(1+n))` let appending
    evidence *reduce* the penalty, so repeating a refutation raised a claim's score.
    Replaced with max-per-distinct-reason, which is monotonic by construction. See §3.3.
-4. **Deleted-source limitation.** A source citing an unresolvable (deleted) source is
+4. **§5.1 blast radius traversed edges uniformly, which is wrong.** Edge direction means
+   opposite things for different relations. Added §5.0 defining `PROPAGATION`.
+5. **§5.3 PageRank ranking is deferred.** The blast radius `impactScore` already ranks, and
+   is more explainable. Added a condition for revisiting.
+6. **Deleted-source limitation.** A source citing an unresolvable (deleted) source is
    treated as an origin. We do not collapse on an unobservable shared root, because that
    would fabricate evidence. This can overstate corroboration and is a known gap to close
    by surfacing "provenance incomplete" in the explanation layer.
 
 ### Next
 
-1. Add `__fixtures__/golden/` with frozen score snapshots, per §4.3.
-2. Phase 2: `packages/graph/` - blast radius, min-cut, ranking. UI-free and API-free.
+1. As-of-dated edge filtering, so the "what did this depend on, and when" question works.
+2. §5.2 min-cut, if the time-budget contract is worth the complexity at our graph size.
+3. Phase 3: ingest adapters and the API, both still untested against real data.

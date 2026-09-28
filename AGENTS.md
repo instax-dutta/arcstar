@@ -107,18 +107,17 @@ When the user requests a durable behavior change, record it here or in the relev
 
 ## Child DOX Index
 
-Two child DOX files exist. Both are leaf packages under `packages/`.
+Three child DOX files exist. All are leaf packages under `packages/`.
 
 - `packages/contracts/AGENTS.md` - Zod schemas shared by engine, API, and web. Changing a
   schema is a breaking change across all three consumers.
 - `packages/credibility/AGENTS.md` - the moat. Pure scoring, cascade detection,
   contradictions, explainability. Owns the purity contract and the ten invariants.
+- `packages/graph/AGENTS.md` - dependency graph, blast radius, impact propagation.
+  Owns `PROPAGATION`, the table that fixes which way impact travels per relation.
 
 Supporting layout that is NOT a DOX boundary:
 
-- `packages/graph/` - does not exist yet. It is created in Phase 2 with a child
-  `AGENTS.md` at the same time. An empty package was scaffolded during Phase 0 and removed
-  because it broke lint; do not recreate a placeholder.
 - `scripts/check-purity.mjs` - the purity gate. Owned by the root rail, not a child DOX.
 
 ### Planned boundaries (create AGENTS.md when the folder is first committed)
@@ -128,7 +127,6 @@ child `AGENTS.md` with the standard section order and add it to this index.
 
 | Planned path | Scope it will own |
 |---|---|
-| `packages/graph/` | Dependency graph types, blast radius, min-cut, severity ranking. Cycle safety and stable ordering are contracts. |
 | `apps/api/` | Hono server, ingest endpoints, cron. Adapters use recorded fixtures, never live network in CI. |
 | `apps/web/` | Vite + React + Sigma.js. Product surface only, no scoring logic may live here. |
 | `evals/` | The 300-claim labelled benchmark. AUC >= 0.80 is the project go/no-go gate. |
