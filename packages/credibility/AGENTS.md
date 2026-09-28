@@ -60,12 +60,33 @@ These bind this package and cannot be weakened by any child document.
 
 ## Verification
 
-- `pnpm --filter @arcstar/credibility test` - 72 tests including 23 property-based
-  invariants, each running 200 cases, with a 100% coverage gate on all four metrics.
+- `pnpm --filter @arcstar/credibility test` - 86 tests including 23 property-based
+  invariants, each running 200 cases, plus 10 golden score snapshots, with a 100%
+  coverage gate on all four metrics.
 - `pnpm --filter @arcstar/credibility lint` - runs ESLint AND the purity gate. Both must
   pass.
 - `pnpm --filter @arcstar/credibility typecheck`.
 - In CI the purity gate runs as its own step, before typecheck, lint, and tests.
+
+### Golden fixtures
+
+`__fixtures__/golden/*.json` holds frozen `(claim, sources) -> (score, explanation)` pairs.
+Hand-written JSON, deliberately NOT Vitest snapshots: `-u` would let a score change be
+accepted by re-running a command with nobody writing down why the methodology moved.
+
+Rules:
+- Every case carries a `rationale` explaining what it demonstrates, asserted by test.
+- Case names are unique across all fixture files, asserted by test.
+- Each fixture is parsed through the real Zod schemas, so a malformed fixture cannot pass
+  by producing an error score.
+- Every expected value must be computed by hand from the documented formula BEFORE being
+  confirmed against the implementation. Capturing output from a run only freezes whatever
+  the code currently does, bugs included. This caught a real transcription error during
+  Phase 1: a value computed for confidence 0.5 was pasted into the 0.45 case.
+- Changing an expected value requires editing the fixture with a written justification in
+  the commit, and bumping `METHOD_VERSION` when the arithmetic itself moves.
+- The file name carries the method version (`scores.v1.json`) so a methodology change is
+  visible in the tree.
 
 ## Child DOX Index
 

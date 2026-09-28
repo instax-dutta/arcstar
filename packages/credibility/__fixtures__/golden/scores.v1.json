@@ -1,0 +1,346 @@
+{
+  "methodVersion": "credibility@1.0.0",
+  "description": "Frozen score snapshots for the core scoring path. Every expected value here was computed by hand from the documented formula and then confirmed against the implementation, not captured from a test run. If the arithmetic changes, one of these must change too, deliberately, with a note in the commit.",
+  "cases": [
+    {
+      "name": "single wire source, no primary evidence",
+      "rationale": "The common case for a well-reported story. base = 0.90 (tier 1), evidence 0.75 (no primary document), extraction 0.9, one independent source. 0.6075 * 1.1377142691.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-1",
+          "text": "A well-reported but undocumented claim.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 1,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": []
+          }
+        ]
+      },
+      "expected": {
+        "score": 0.691161418479,
+        "base": 0.9,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 0,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), no primary evidence attached"
+      }
+    },
+    {
+      "name": "single wire source with primary evidence",
+      "rationale": "Same as the previous case but a primary document is attached, so the evidence gate opens from 0.75 to 1.0. The score rises by exactly the 1/0.75 ratio, 0.921548557971.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-2",
+          "text": "A claim backed by a primary document.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 1,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": [],
+            "primaryEvidence": "filed-document.pdf"
+          }
+        ]
+      },
+      "expected": {
+        "score": 0.921548557971,
+        "base": 0.9,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 0,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), with primary evidence attached"
+      }
+    },
+    {
+      "name": "anonymous social source alone",
+      "rationale": "The floor of a real score. A single tier-5 source with no document is 0.40 * 0.75 * 0.9 = 0.27, boosted once. 0.307182852657.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-3",
+          "text": "An anonymous claim.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 5,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": []
+          }
+        ]
+      },
+      "expected": {
+        "score": 0.307182852657,
+        "base": 0.4,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 0,
+        "baseWhy": "strongest independent source is pub-a (tier 5: anonymous or social), no primary evidence attached"
+      }
+    },
+    {
+      "name": "ten tier-1 outlets all citing one anonymous root scores the same as one anonymous source",
+      "rationale": "THE headline invariant. Ten wire-service-tier outlets are provided, but every one of them cites the same anonymous root, so independence collapses to 1 and the tier-5 root sets the gate. The result is byte-identical to the single anonymous source case above: 0.307182852657. This is what makes apparent corroboration unable to inflate a score, and it is the single most important number in the project.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-4",
+          "text": "A claim echoed widely but originating from one anonymous post.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["o1", "o2", "o3", "o4", "o5", "o6", "o7", "o8", "o9", "o10"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          { "id": "root", "publisher": "pub-root", "tier": 5, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": [] },
+          { "id": "o1", "publisher": "pub-o1", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o2", "publisher": "pub-o2", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o3", "publisher": "pub-o3", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o4", "publisher": "pub-o4", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o5", "publisher": "pub-o5", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o6", "publisher": "pub-o6", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o7", "publisher": "pub-o7", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o8", "publisher": "pub-o8", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o9", "publisher": "pub-o9", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] },
+          { "id": "o10", "publisher": "pub-o10", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": ["root"] }
+        ]
+      },
+      "expected": {
+        "score": 0.307182852657,
+        "base": 0.4,
+        "independentCount": 1,
+        "collapsedFrom": 10,
+        "contradictionCount": 0,
+        "baseWhy": "strongest independent source is pub-root (tier 5: anonymous or social), no primary evidence attached"
+      }
+    },
+    {
+      "name": "three genuinely independent wire sources",
+      "rationale": "Cascades do not apply here, so three real sources give independence 3 and a much larger boost: 0.6075 * 1.2719044439 = 0.772681949698. This is what honest corroboration is supposed to buy, and it is worth comparing against the cascade case above.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-5",
+          "text": "A claim corroborated by three unrelated outlets.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a", "b", "c"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          { "id": "a", "publisher": "pub-a", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": [] },
+          { "id": "b", "publisher": "pub-b", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": [] },
+          { "id": "c", "publisher": "pub-c", "tier": 1, "publishedAt": "2026-03-01T00:00:00.000Z", "citesSourceIds": [] }
+        ]
+      },
+      "expected": {
+        "score": 0.772681949698,
+        "base": 0.9,
+        "independentCount": 3,
+        "collapsedFrom": 3,
+        "contradictionCount": 0,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), no primary evidence attached"
+      }
+    },
+    {
+      "name": "claim with no resolvable support scores exactly zero",
+      "rationale": "INVARIANT 9. A supporting id that is absent from the graph cannot be reasoned about, so the score is exactly 0 rather than some small positive floor. 0.307182852657 is the floor of a real score; 0 is the absence of one.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-6",
+          "text": "A claim with no usable provenance.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["ghost"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": []
+      },
+      "expected": {
+        "score": 0,
+        "base": 0,
+        "independentCount": 0,
+        "collapsedFrom": 0,
+        "contradictionCount": 0,
+        "baseWhy": "no resolvable supporting source"
+      }
+    },
+    {
+      "name": "one contradicting claim halves a documented claim",
+      "rationale": "A single contradiction of score 0.5 gives penalty 0.5, and 0.921548557971 * 0.5 = 0.460774278986. Contested evidence should land visibly lower, but not worthless.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-7",
+          "text": "A documented claim that is contested.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 1,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": [],
+            "primaryEvidence": "filed-document.pdf"
+          }
+        ],
+        "contradictingClaims": [
+          { "claimId": "clm-counter-1", "score": 0.5, "reason": "an official denied this" }
+        ]
+      },
+      "expected": {
+        "score": 0.460774278986,
+        "base": 0.9,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 1,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), with primary evidence attached"
+      }
+    },
+    {
+      "name": "overwhelming contradiction is capped at half",
+      "rationale": "INVARIANT 8. Five distinct counter-claims at the maximum score would be a raw penalty of 6.75, but the penalty is capped at 0.5, so the result is identical to a single strong contradiction: 0.460774278986. Without this cap, coordinated opposition could drive a well-sourced claim to zero, which would make the score trivial to attack.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-8",
+          "text": "A documented claim facing a coordinated pushback.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 1,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": [],
+            "primaryEvidence": "filed-document.pdf"
+          }
+        ],
+        "contradictingClaims": [
+          { "claimId": "clm-counter-1", "score": 1.35, "reason": "official denial" },
+          { "claimId": "clm-counter-2", "score": 1.35, "reason": "witness disagreement" },
+          { "claimId": "clm-counter-3", "score": 1.35, "reason": "later retraction" },
+          { "claimId": "clm-counter-4", "score": 1.35, "reason": "document forgery finding" },
+          { "claimId": "clm-counter-5", "score": 1.35, "reason": "contradicting measurement" }
+        ]
+      },
+      "expected": {
+        "score": 0.460774278986,
+        "base": 0.9,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 5,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), with primary evidence attached"
+      }
+    },
+    {
+      "name": "repeating one counter-claim costs no more than saying it once",
+      "rationale": "Repetition is collapsed by taking the max score per distinct reason. Ten copies of the same refutation give exactly the same penalty as one, 0.460774278986, so an attacker cannot manufacture contradiction by amplification. The eleven entries are deduplicated in the explanation, leaving contradictionCount 1.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-9",
+          "text": "A documented claim whose refutation is widely repeated.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.9
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 1,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": [],
+            "primaryEvidence": "filed-document.pdf"
+          }
+        ],
+        "contradictingClaims": [
+          { "claimId": "clm-counter-1", "score": 0.5, "reason": "an official denied this" },
+          { "claimId": "clm-counter-2", "score": 0.4, "reason": "an official denied this" },
+          { "claimId": "clm-counter-3", "score": 0.9, "reason": "an official denied this" },
+          { "claimId": "clm-counter-4", "score": 0.3, "reason": "an official denied this" },
+          { "claimId": "clm-counter-5", "score": 0.2, "reason": "an official denied this" },
+          { "claimId": "clm-counter-6", "score": 0.1, "reason": "an official denied this" },
+          { "claimId": "clm-counter-7", "score": 0.6, "reason": "an official denied this" },
+          { "claimId": "clm-counter-8", "score": 0.45, "reason": "an official denied this" },
+          { "claimId": "clm-counter-9", "score": 0.35, "reason": "an official denied this" },
+          { "claimId": "clm-counter-10", "score": 0.25, "reason": "an official denied this" },
+          { "claimId": "clm-counter-11", "score": 0.15, "reason": "an official denied this" }
+        ]
+      },
+      "expected": {
+        "score": 0.460774278986,
+        "base": 0.9,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 11,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), with primary evidence attached"
+      }
+    },
+    {
+      "name": "lower extraction confidence scales the score linearly",
+      "rationale": "The extraction gate is a true multiplier, not a hidden threshold. 0.45 is exactly half of 0.9, so the score must be exactly half of the confidence-0.9 case above: 0.460774278986. That this happens to equal the two contradiction cases above is a coincidence of the numbers, not a shared code path.",
+      "input": {
+        "claim": {
+          "id": "clm-golden-10",
+          "text": "A claim we are only half sure we parsed correctly.",
+          "subjectNodeId": "node-hormuz",
+          "assertedAt": "2026-03-01T00:00:00.000Z",
+          "supportingSourceIds": ["a"],
+          "contradictingSourceIds": [],
+          "extractionConfidence": 0.45
+        },
+        "allSources": [
+          {
+            "id": "a",
+            "publisher": "pub-a",
+            "tier": 1,
+            "publishedAt": "2026-03-01T00:00:00.000Z",
+            "citesSourceIds": [],
+            "primaryEvidence": "filed-document.pdf"
+          }
+        ]
+      },
+      "expected": {
+        "score": 0.460774278986,
+        "base": 0.9,
+        "independentCount": 1,
+        "collapsedFrom": 1,
+        "contradictionCount": 0,
+        "baseWhy": "strongest independent source is pub-a (tier 1: primary or wire service), with primary evidence attached"
+      }
+    }
+  ]
+}

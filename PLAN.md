@@ -250,10 +250,21 @@ become unreproducible, and it is invisible without property testing.
 
 ### 4.3 Golden tests
 
-Score changes must be deliberate. `__fixtures__/golden/` holds frozen
-`(claim, sources) -> (score, explanation)` pairs. Any change to the golden output is a
-**failing test requiring an explicit snapshot update with a written justification**.
-This is how method evolution stays auditable.
+Hand-written JSON fixtures in `packages/credibility/__fixtures__/golden/`, deliberately not
+Vitest snapshots: `vitest -u` would let a score change be accepted by re-running a command
+with nobody recording why the methodology moved.
+
+Every case carries a `rationale` and a unique name, both asserted by test, and every fixture
+is parsed through the real Zod schemas so a malformed fixture cannot pass by producing an
+error score. Expected values are computed by hand from the documented formula and *then*
+confirmed against the implementation, because capturing output from a run only freezes
+whatever the code currently does, bugs included. Ten cases exist, covering single-source
+scores with and without primary evidence, the cascade case, honest corroboration, zero
+support, contradiction, the contradiction cap, repetition collapse, and linear extraction.
+
+Changing an expected value means editing the fixture with a written justification. The file
+name carries the method version (`scores.v1.json`) so a methodology change is visible in
+the tree.
 
 ### 4.4 Recorded fixtures for ingest
 
