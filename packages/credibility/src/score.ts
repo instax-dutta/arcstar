@@ -1,5 +1,6 @@
 import type { Claim, Score, ScoreExplanation, Source, SourceTier } from "@arcstar/contracts";
 import { independentSources } from "./independence.js";
+import { applyContradiction, type ContradictingClaim } from "./contradiction.js";
 
 /**
  * Score composition. Spec: PLAN.md section 3.2.
@@ -61,6 +62,16 @@ export interface ScoreInput {
    * depends on shared ancestry that often lives outside the supporting set.
    */
   allSources: readonly Source[];
+  /**
+   * Pre-scored claims that contradict this one. Supplied by the caller rather
+   * than resolved here, because a source id does not identify what was actually
+   * claimed - only a claim does. Defaults to none.
+   *
+   * Note the deliberate split: `Claim.contradictingSourceIds` records WHICH
+   * sources disputed this claim, while this field carries the scored
+   * counter-claims that actually move the number.
+   */
+  contradictingClaims?: readonly ContradictingClaim[];
 }
 
 export interface ScoreResult {
@@ -72,7 +83,7 @@ function saturatingBoost(independence: number): number {
   return 1 - Math.exp(-independence / SATURATION);
 }
 
-export function scoreClaim({ claim, allSources }: ScoreInput): ScoreResult {
+export function scoreClaim({ claim, allSources, contradictingClaims = [] }: ScoreInput): ScoreResult {
   const independent = independentSources(claim.supportingSourceIds, allSources);
 
   // INVARIANT 9: nothing resolvable behind the claim means exactly zero.
@@ -103,7 +114,11 @@ export function scoreClaim({ claim, allSources }: ScoreInput): ScoreResult {
   const base = TIER_WEIGHT[best.tier];
   const gate = base * evidence * claim.extractionConfidence;
   const boost = saturatingBoost(independent.length);
-  const finalScore = gate * (1 + BOOST_WEIGHT * boost);
+  const uncorrected = gate * (1 + BOOST_WEIGHT * boost);
+
+  // Contradiction is applied last and can only ever reduce the score. The cap in
+  // applyContradiction is what guarantees INVARIANT 8.
+  const { score: finalScore, contradiction } = applyContradiction(uncorrected, contradictingClaims);
 
   const baseWhy =
     `strongest independent source is ${best.publisher} (tier ${best.tier}: ${TIER_LABEL[best.tier]})` +
@@ -114,7 +129,7 @@ export function scoreClaim({ claim, allSources }: ScoreInput): ScoreResult {
     baseWhy,
     independentSources: independent,
     collapsedFrom: claim.supportingSourceIds.length,
-    contradiction: [],
+    contradiction,
     finalScore,
     methodVersion: METHOD_VERSION,
   };
