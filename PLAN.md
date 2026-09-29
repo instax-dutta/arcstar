@@ -494,7 +494,7 @@ logic is proven by tests first.
 ### Phase 1 - Credibility core: COMPLETE
 ### Phase 2 - Graph core: PARTIAL (blast radius done, min-cut deferred)
 
-Verified: `pnpm run check` green (10/10 turbo tasks), 146 tests, 100% coverage on
+Verified: 170 tests, 100% coverage on
 statements, branches, functions, and lines in all three packages, purity gate verified in
 both directions.
 
@@ -504,19 +504,27 @@ Delivered:
 - `packages/contracts` - all Zod schemas and cross-field validation (18 tests).
 - `packages/credibility` - cascade detection, score composition, contradiction
   (86 tests, 23 property invariants, 10 golden snapshots).
-- `packages/graph` - blast radius with relation-aware propagation (42 tests, 6 property
-  invariants).
+- `packages/graph` - blast radius with relation-aware propagation and as-of dated edges
+  (66 tests, 12 property invariants).
 - `scripts/check-purity.mjs` - the purity gate.
 
 All ten invariants from §4.2 are enforced. Scores are final for methodology version
 `credibility@1.0.0`.
 
+### Phase 2 - Graph core: as-of dating added
+
+`resolveEdgesAsOf` reduces an edge history to a single snapshot. An edge's `asOf` is the
+date from which the relationship holds, and each (from, to, relation) triple resolves to
+its most recent edge at or before the query date. Omitting `asOf` means "now".
+
+A **weight-0 edge is an end marker**: the relationship still resolves at that date but
+contributes nothing, so a dependency can be recorded as lapsed. There is no `validUntil`
+field. Exact (triple, asOf) collisions are corrupt upstream data and resolve to the maximum
+weight, so the result never depends on array order.
+
 Not yet done:
 
 - §5.2 min-cut (`criticalChokepoints`).
-- As-of-dated edge filtering at query time. Edges carry `asOf`, but `blastRadius`
-  currently ignores it and treats the whole edge list as one snapshot. Honouring the date
-  is required before the "what depended on this in March 2022" question can be answered.
 - `__fixtures__/golden/` for the graph package.
 
 ### Corrections to this plan found during Phase 0-2
@@ -547,3 +555,11 @@ Recorded here because they change the specification, not just the implementation
 1. As-of-dated edge filtering, so the "what did this depend on, and when" question works.
 2. §5.2 min-cut, if the time-budget contract is worth the complexity at our graph size.
 3. Phase 3: ingest adapters and the API, both still untested against real data.
+
+### Local resource policy
+
+This machine is shared. `pnpm test` fans out across turbo and vitest workers and will
+saturate every core, so vitest is configured with `maxWorkers: 1` and `fileParallelism:
+false` in all three packages - the suites are small enough that wall-clock cost is
+negligible. `./scripts/gentle-test.sh [package]` runs them sequentially at `nice 19` with
+a 512MB heap cap. CI still runs at full parallelism.

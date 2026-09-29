@@ -69,6 +69,72 @@ export interface BlastOptions {
   ceiling: number;
   /** Restrict traversal to these relations. Defaults to all impact-bearing ones. */
   relations?: readonly RelationType[];
+  /**
+   * Resolve the edge history to this instant, so the query answers "what was true
+   * then" rather than the union of all history. See `resolveEdgesAsOf`.
+   */
+  asOf?: Date;
+}
+
+/**
+ * Resolve an edge history to a single snapshot as of a given date.
+ *
+ * An edge's `asOf` is the date from which that relationship holds. Several edges
+ * sharing a (from, to, relation) triple therefore form a history, and a query
+ * resolves each triple to the most recent edge at or before the requested date.
+ *
+ * A weight-0 edge is a valid resolution and acts as an end marker: the
+ * relationship still exists at that date but contributes nothing, so the
+ * dependency is gone from that point on.
+ *
+ * `asOf` of `undefined` means "now": each triple resolves to its most recent edge
+ * overall.
+ *
+ * Order independence is a hard requirement, not a nicety. Two edges claiming the
+ * same relationship on the same day is corrupt upstream data, but it must still
+ * resolve identically however it arrives, so an exact collision takes the maximum
+ * weight rather than whichever edge the array happened to place last.
+ */
+export function resolveEdgesAsOf(edges: readonly Edge[], asOf: Date | undefined): Edge[] {
+  const cutoff = asOf?.getTime();
+  const best = new Map<string, Edge>();
+
+  for (const e of edges) {
+    const t = e.asOf.getTime();
+    if (cutoff !== undefined && t > cutoff) continue;
+
+    const key = `${e.from}|${e.to}|${e.relation}`;
+    const current = best.get(key);
+    if (current === undefined) {
+      best.set(key, e);
+      continue;
+    }
+    const currentT = current.asOf.getTime();
+    if (t > currentT) {
+      best.set(key, e);
+    } else if (t === currentT && e.weight > current.weight) {
+      // Same instant, different weight: corrupt input. Take the maximum so the
+      // result does not depend on array order.
+      best.set(key, e);
+    }
+  }
+
+  // Stable output order so callers and tests see a deterministic sequence.
+  return [...best.values()].sort(compareResolvedEdges);
+}
+
+/** Three-way string comparison. Total and order-independent. */
+export function compareKeys(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Deterministic ordering for a resolved edge set: by from, then to, then relation.
+ * Exported so the ordering contract can be tested directly rather than only through
+ * whatever comparisons a particular sort implementation happens to make.
+ */
+export function compareResolvedEdges(a: Edge, b: Edge): number {
+  return compareKeys(a.from, b.from) || compareKeys(a.to, b.to) || compareKeys(a.relation, b.relation);
 }
 
 export const DEFAULT_BLAST_OPTIONS: BlastOptions = {
@@ -146,16 +212,23 @@ export function blastRadius(
   disruptedNode: string,
   options: Partial<BlastOptions> = {},
 ): BlastResult[] {
-  const { maxHops, decay, ceiling, relations } = { ...DEFAULT_BLAST_OPTIONS, ...options };
+  const { maxHops, decay, ceiling, relations, asOf } = {
+    ...DEFAULT_BLAST_OPTIONS,
+    ...options,
+  };
 
   if (!Number.isFinite(maxHops) || maxHops < 1) return [];
   if (!Number.isFinite(decay) || decay < 0 || decay > 1) return [];
+
+  // Resolve the edge history before building the adjacency, so a dated query
+  // sees the graph as it stood rather than the union of all history.
+  const resolvedEdges = asOf === undefined ? graph.edges : resolveEdgesAsOf(graph.edges, asOf);
 
   const allowed =
     relations && relations.length > 0
       ? new Set(relations)
       : new Set(ALL_IMPACT_RELATIONS);
-  const adjacency = buildImpactAdjacency(graph, allowed);
+  const adjacency = buildImpactAdjacency({ nodes: graph.nodes, edges: resolvedEdges }, allowed);
 
   const nodeIds = new Set(graph.nodes.map((n) => n.id));
   if (!nodeIds.has(disruptedNode)) return [];

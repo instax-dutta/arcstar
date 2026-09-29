@@ -4,6 +4,11 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
     environment: "node",
+    // Deliberately single-threaded. The suites are small (tens of tests), so
+    // wall-clock cost is negligible, and it keeps test runs to roughly one core.
+    // Property tests are CPU-bound and would otherwise saturate every worker.
+    maxWorkers: 1,
+    fileParallelism: false,
     // This package is the moat. It gets the strictest gates in the repo and
     // runs property tests far harder than the suite size suggests, so the
     // default 5s timeout is too tight for a cold run.

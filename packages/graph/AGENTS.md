@@ -33,6 +33,13 @@ claims attach to nodes, blast radius ranks what those nodes would take down.
   paths, so decay applies from the first hop onward. Results are clamped to `ceiling`.
 - The disrupted node is excluded from its own blast radius. The question is what else
   breaks.
+- **As-of dating is a real feature, not decoration.** An edge's `asOf` is the date from
+  which that relationship holds, and `resolveEdgesAsOf` reduces a history to one snapshot:
+  each (from, to, relation) triple resolves to its most recent edge at or before the query
+  date. Omitting `asOf` means "now", resolving each triple to its most recent edge overall.
+- **A weight-0 edge is an end marker.** The relationship still resolves at that date but
+  contributes nothing, so a dependency can be recorded as having lapsed. There is no
+  `validUntil` field; a zero weight is how a relationship ends.
 
 ## Work Guidance
 
@@ -49,12 +56,20 @@ claims attach to nodes, blast radius ranks what those nodes would take down.
 - Keep graph algorithms pure and side-effect free so they can be property tested against
   arbitrary graphs. Determinism is asserted directly, because reordering an array must
   never change an answer a user sees.
+- Ordering functions are exported so they can be tested directly. A sort comparator hidden
+  inside a `sort()` call is only covered for whichever comparisons that particular sort
+  implementation happens to make, which is not the same as being tested.
+- Time is never read from the clock here. The caller supplies `asOf`. If a function seems
+  to need "now", take a parameter instead.
 
 ## Verification
 
-- `pnpm --filter @arcstar/graph test` - 42 tests including 6 property-based invariants
-  (cycle safety, determinism, bounds, ordering, exclusion, hop monotonicity) each running
-  200 generated graphs, with a 100% coverage gate on all four metrics.
+- `pnpm --filter @arcstar/graph test` - 66 tests including 12 property-based invariants
+  (cycle safety, determinism, bounds, ordering, exclusion, hop monotonicity, and five
+  temporal ones) each running 150-200 generated graphs, with a 100% coverage gate on all
+  four metrics.
+- `./scripts/gentle-test.sh graph` - the same suite single-threaded at nice 19 with a
+  512MB heap cap, for running on a busy machine. Use this locally when other work matters.
 - `pnpm --filter @arcstar/graph typecheck` and `pnpm --filter @arcstar/graph lint`.
 
 ## Child DOX Index
