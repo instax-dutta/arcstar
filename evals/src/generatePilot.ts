@@ -64,4 +64,4 @@ for (let i = 0; i < 6; i++) {
 const out = join(dirname(fileURLToPath(import.meta.url)), "..", "pilot", "pilot.v1.json");
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(records, null, 2) + "\n");
-console.log(`wrote ${records.length} records to ${out}`);
+console.warn(`wrote ${records.length} records to ${out}`);
