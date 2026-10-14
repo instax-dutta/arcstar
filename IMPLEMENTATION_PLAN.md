@@ -158,21 +158,23 @@ Use W3C PROV-O as a compatible conceptual reference for provenance, not as a man
 
 ## 7. Phase status overview
 
-| Phase | Scope | Initial status |
+| Phase | Scope | Current status |
 |---|---|---|
 | 0 | Foundation, monorepo, CI, pure package boundaries | Complete |
 | 1 | Credibility core and deterministic invariants | Complete as implementation; empirical validity unproven |
 | 2 | Dependency graph core and as-of resolution | Core blast-radius behavior implemented; graph corpus and min-cut deferred |
-| 3 | Evaluation protocol and benchmark pilot | Not started |
-| 4 | Evidence contracts, persistence, migrations, repositories | Not started |
-| 5 | Source adapters and reliable ingestion pipeline | Not started |
-| 6 | Claim extraction, entity resolution, evidence review | Not started |
+| 3 | Evaluation protocol and benchmark pilot | Synthetic pilot runner and report exist; real labelled corpus and leakage checks remain |
+| 4 | Evidence contracts, persistence, migrations, repositories | Partial: contracts, migrations, in-memory and initial PostgreSQL repositories; full integration not proven |
+| 5 | Source adapters and reliable ingestion pipeline | Partial: RSS/Atom fixture adapter and idempotent ingestion implemented; worker, retries, and freshness visibility remain |
+| 6 | Claim extraction, entity resolution, evidence review | Partial: deterministic candidate and entity-span extraction implemented; LLM/review workflow remains |
 | 7 | Evidence-backed dependency corpus and scenario evaluation | Partial foundation; corpus/evaluation incomplete |
-| 8 | Analyst API and investigation UI | Demo API and graph MVP exist; target workflow incomplete |
-| 9 | Hardening, self-hosting, limited beta | Not started |
+| 8 | Analyst API and investigation UI | Partial: evidence candidates endpoint and UI panel added; full investigation workflow not implemented |
+| 9 | Hardening, self-hosting, limited beta | Partial: config validation, self-hosting docs, Docker Compose started; security and operations hardening remain |
 | 10 | Expansion to additional domains and contributors | Deferred until beta gates pass |
 
 Phase numbers describe the updated execution order. The original status table in PLAN.md is historical; this document controls the order of unshipped work. Existing methodological decisions and corrections in PLAN.md remain binding unless explicitly changed with evidence.
+
+Status values are honest milestones, not claims that an exit gate has passed. "Partial" means a durable slice exists with tests or fixtures; remaining exit-gate work is listed in the phase.
 
 ## 8. Phase 0 — Foundations
 
@@ -314,6 +316,8 @@ A reproducible benchmark report and pilot dataset exist; leakage checks pass; th
 
 **Priority: P0.**
 
+**Status: Partial. Claim-evidence, source-lineage, and assessment contracts exist. Ordered migration, in-memory repositories, PostgreSQL source and assessment repositories, and idempotent feed ingestion exist. Full repository coverage, integration tests, document/revision handling, and restart preservation remain.**
+
 ### Purpose
 Replace demo-only data paths with durable, auditable canonical records while preserving existing pure packages.
 
@@ -342,6 +346,8 @@ A clean database migrates from empty state; seeds and fixtures load deterministi
 ## 13. Phase 5 — Source adapters and reliable ingestion
 
 **Priority: P0 for one adapter, then incremental expansion.**
+
+**Status: Partial. RSS/Atom parsing and idempotent feed ingestion exist against a recorded fixture. Retries, health reporting, security validation, worker queueing, and real provider integration remain.**
 
 ### Purpose
 Ingest a narrow selection of useful, lawful-to-use source material reliably without turning external API instability into core-engine instability.
@@ -389,6 +395,8 @@ At least one real adapter is integrated end to end using fixtures for CI; retrie
 ## 14. Phase 6 — Claim extraction, entity resolution, and evidence review
 
 **Priority: P0 after the first persistent ingestion path exists.**
+
+**Status: Partial. Deterministic sentence, claim-candidate, and alias/entity-span extraction exist as a no-LLM path with offset-stabilized spans. Provider-backed extraction, ambiguity routing, reviewer confirmation, and fixture-based quality measurement remain.**
 
 ### Purpose
 Convert retrieved documents into reviewable candidate claims without pretending the model has established truth.
@@ -451,7 +459,7 @@ The curated graph has source references for consequential edges; each target sce
 
 ## 16. Phase 8 — API and analyst investigation workflow
 
-**Status: Basic API and graph demo exist; full workflow is not implemented.**
+**Status: Partial. Score, blast-radius, and evidence candidate endpoints plus a graph and evidence panel exist. Persisted claim/evidence read routes, investigation creation, snapshot scenarios, CORS allowlist, and limits remain.**
 
 ### Purpose
 Join evidence, provenance, method assessments, and graph impact into a usable, auditable investigation.
@@ -497,6 +505,8 @@ A new user can run the initial investigation from persisted source documents thr
 ## 17. Phase 9 — Hardening, self-hosting, and limited beta
 
 **Priority: P1 after a usable end-to-end vertical slice.**
+
+**Status: Partial. Environment validation, Docker Compose, sample env file, and self-hosting documentation exist. Security hardening, observability, backup/restore verification, and limited-beta controls remain.**
 
 ### Security and reliability
 - Threat-model ingestion, external documents, model extraction, API computation, secrets, and persistent records.
@@ -661,4 +671,4 @@ The first credible beta is complete only when all of the following are true:
 - Do not weaken quality gates solely to make a phase appear complete.
 - If a gate fails, record the failure, keep the method/features experimental, and revise the appropriate phase.
 
-**Next action:** start Phase 3 — evaluation protocol and benchmark pilot — while doing only the minimum contract/storage design needed to avoid blocking it. The next release should prove a narrow use case end to end, not maximize the feature count.
+**Next action:** complete the Phase 3 real labelled pilot with leakage checks and baselines, then finish the Phase 4 repository and integration gate. The next release should prove a narrow use case end to end, not maximize the feature count.
