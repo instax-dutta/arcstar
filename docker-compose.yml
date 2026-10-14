@@ -25,6 +25,7 @@ services:
     environment:
       PORT: 8787
       NODE_ENV: production
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       DATABASE_URL: postgres://${POSTGRES_USER:-arcstar}:${POSTGRES_PASSWORD:-arcstar}@postgres:5432/${POSTGRES_DB:-arcstar}
     ports:
       - "127.0.0.1:8787:8787"

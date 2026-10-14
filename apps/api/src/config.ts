@@ -2,6 +2,19 @@ export interface AppConfig {
   nodeEnv: "development" | "test" | "production";
   port: number;
   databaseUrl?: string;
+  corsOrigins: string[];
+}
+
+function parseOrigins(env: Record<string, string | undefined>, nodeEnv: AppConfig["nodeEnv"]): string[] {
+  const raw = env.CORS_ALLOWED_ORIGINS ?? (nodeEnv === "production" ? "" : "http://localhost:5173");
+  const origins = raw
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+  if (origins.some((origin) => !/^https?:\/\//.test(origin))) {
+    throw new Error("CORS_ALLOWED_ORIGINS entries must start with http:// or https://");
+  }
+  return origins;
 }
 
 export function loadConfig(env: Record<string, string | undefined>): AppConfig {
@@ -21,5 +34,5 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     throw new Error("DATABASE_URL must be a postgres:// or postgresql:// connection string");
   }
 
-  return { nodeEnv: rawEnv, port, databaseUrl };
+  return { nodeEnv: rawEnv, port, databaseUrl, corsOrigins: parseOrigins(env, rawEnv) };
 }

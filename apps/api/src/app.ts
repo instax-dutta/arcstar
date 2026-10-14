@@ -8,6 +8,14 @@ import { ClaimSchema, EdgeSchema, NodeSchema, SourceSchema } from "@arcstar/cont
 import { demoClaim, demoSources } from "./data/demo.js";
 import { maritimeGraph } from "./data/maritime.js";
 import { extractEvidence } from "./extractEvidence.js";
+import { loadConfig } from "./config.js";
+
+const config = loadConfig(process.env);
+
+const MAX_NODES = 2000;
+const MAX_EDGES = 10000;
+const MAX_SOURCES = 20000;
+const MAX_TEXT_LENGTH = 100000;
 
 
 function coerceDate(key: string) {
@@ -26,7 +34,7 @@ const HttpEdgeSchema = z.preprocess(coerceDate("asOf"), EdgeSchema);
 
 export const app = new Hono();
 
-app.use("*", cors());
+app.use("*", cors({ origin: (origin) => (origin && config.corsOrigins.includes(origin) ? origin : undefined) }));
 
 app.get("/health", (c) => c.json({ ok: true }));
 
@@ -36,7 +44,10 @@ app.get("/claim", (c) => c.json({ claim: demoClaim, sources: demoSources }));
 
 app.post(
   "/score",
-  zValidator("json", z.object({ claim: HttpClaimSchema, allSources: z.array(HttpSourceSchema) })),
+  zValidator(
+    "json",
+    z.object({ claim: HttpClaimSchema, allSources: z.array(HttpSourceSchema).max(MAX_SOURCES) }),
+  ),
   (c) => {
     const { claim, allSources } = c.req.valid("json");
     const result = scoreClaim({ claim, allSources });
@@ -46,15 +57,15 @@ app.post(
 
 const blastRequestSchema = z.object({
   graph: z.object({
-    nodes: z.array(NodeSchema),
-    edges: z.array(HttpEdgeSchema),
+    nodes: z.array(NodeSchema).max(MAX_NODES),
+    edges: z.array(HttpEdgeSchema).max(MAX_EDGES),
   }),
   disruptedNode: z.string().min(1),
   options: z
     .object({
-      maxHops: z.number().int().min(1).optional(),
+      maxHops: z.number().int().min(1).max(10).optional(),
       decay: z.number().min(0).max(1).optional(),
-      ceiling: z.number().min(0).optional(),
+      ceiling: z.number().min(0).max(100).optional(),
     })
     .optional(),
 });
@@ -67,7 +78,7 @@ app.post("/blast-radius", zValidator("json", blastRequestSchema), (c) => {
 
 app.post(
   "/evidence/candidates",
-  zValidator("json", z.object({ text: z.string().min(1), nodes: z.array(NodeSchema) })),
+  zValidator("json", z.object({ text: z.string().min(1).max(MAX_TEXT_LENGTH), nodes: z.array(NodeSchema).max(MAX_NODES) })),
   (c) => {
     const { text, nodes } = c.req.valid("json");
     return c.json(extractEvidence(text, nodes));

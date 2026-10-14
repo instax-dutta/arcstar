@@ -1,6 +1,42 @@
 import { describe, expect, it } from "vitest";
 import { app } from "./app.js";
 import { maritimeGraph } from "./data/maritime.js";
+import type { Node } from "@arcstar/contracts";
+
+function node(id: string): Node {
+  return { id, type: "chokepoint", label: id, props: {} };
+}
+
+describe("cors and request limits", () => {
+  it("allows the configured development origin and blocks others", async () => {
+    const allowed = await app.request("/health", { headers: { origin: "http://localhost:5173" } });
+    expect(allowed.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
+
+    const blocked = await app.request("/health", { headers: { origin: "http://evil.example" } });
+    expect(blocked.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("rejects oversized evidence text", async () => {
+    const res = await app.request("/evidence/candidates", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "a".repeat(100001), nodes: [] }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects oversized graphs before traversal", async () => {
+    const res = await app.request("/blast-radius", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        graph: { nodes: Array.from({ length: 2001 }, (_, i) => node(`n${i}`)), edges: [] },
+        disruptedNode: "n0",
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+});
 
 describe("evidence route", () => {
   it("extracts claim candidates and entity spans from text", async () => {
