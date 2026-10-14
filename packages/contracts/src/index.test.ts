@@ -58,11 +58,18 @@ describe("SourceSchema", () => {
     const { primaryEvidence: _dropped, ...withoutEvidence } = VALID_SOURCE;
     expect(SourceSchema.parse(withoutEvidence)).toEqual(withoutEvidence);
   });
+  it("rejects an invalid published date", () => {
+    expect(() => SourceSchema.parse({ ...VALID_SOURCE, publishedAt: new Date("not-a-date") })).toThrow();
+  });
 });
 
 describe("ClaimSchema", () => {
   it("accepts a well-formed claim", () => {
     expect(ClaimSchema.parse(VALID_CLAIM)).toEqual(VALID_CLAIM);
+  });
+
+  it("rejects an invalid asserted date", () => {
+    expect(() => ClaimSchema.parse({ ...VALID_CLAIM, assertedAt: new Date("not-a-date") })).toThrow();
   });
 
   it("requires extractionConfidence within 0..1", () => {
@@ -133,6 +140,18 @@ describe("EdgeSchema", () => {
     const parsed = EdgeSchema.parse(edge);
     expect(parsed.asOf).toBeInstanceOf(Date);
     expect(parsed.asOf.toISOString()).toBe("2026-01-01T00:00:00.000Z");
+  });
+
+  it("rejects an invalid asOf date", () => {
+    expect(() =>
+      EdgeSchema.parse({
+        from: "a",
+        to: "b",
+        relation: "depends_on",
+        weight: 1,
+        asOf: new Date("not-a-date"),
+      }),
+    ).toThrow();
   });
 
   it("rejects an unknown relation type", () => {

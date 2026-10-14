@@ -24,12 +24,16 @@ export const SourceTierSchema = z.union([
 
 const NonEmptyString = z.string().trim().min(1, "must not be empty");
 
+const ValidDate = z.date().refine((value) => !Number.isNaN(value.getTime()), {
+  message: "must be a valid date",
+});
+
 export const SourceSchema = z
   .object({
     id: NonEmptyString,
     publisher: NonEmptyString,
     tier: SourceTierSchema,
-    publishedAt: z.date(),
+    publishedAt: ValidDate,
     /**
      * Provenance chain. Drives cascade detection, which is the core innovation.
      * A source may not cite itself.
@@ -53,7 +57,7 @@ export const ClaimSchema = z
     text: NonEmptyString,
     /** Graph node this claim is about. */
     subjectNodeId: NonEmptyString,
-    assertedAt: z.date(),
+    assertedAt: ValidDate,
     supportingSourceIds: z.array(NonEmptyString),
     contradictingSourceIds: z.array(NonEmptyString),
     /** How sure we are that the claim was parsed correctly, 0..1. A scored gate. */
@@ -115,7 +119,7 @@ export const EdgeSchema = z
     /** Strength of the dependency, 0..1. */
     weight: z.number().min(0).max(1),
     /** Edges are as-of dated so we can ask "what depended on this, and when". */
-    asOf: z.date(),
+    asOf: ValidDate,
   })
   .superRefine((edge, ctx) => {
     if (edge.from === edge.to) {
@@ -165,7 +169,7 @@ export const AssessmentSchema = z.object({
   claimId: NonEmptyString,
   score: ScoreSchema,
   explanation: ScoreExplanationSchema,
-  assessedAt: z.date(),
+  assessedAt: ValidDate,
 });
 
 export type SourceTier = z.infer<typeof SourceTierSchema>;
