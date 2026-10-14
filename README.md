@@ -43,7 +43,7 @@ proven by tests.
 
 Current automated status across all packages: 100% statement, branch, function, and
 line coverage on `packages/contracts`, `packages/credibility`, and `packages/graph`;
-all 235+ tests pass; the purity gate passes in both directions.
+all 178 tests pass; the purity gate passes in both directions.
 
 ## Monorepo structure
 
