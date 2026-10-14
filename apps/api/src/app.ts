@@ -6,7 +6,7 @@ import { scoreClaim } from "@arcstar/credibility";
 import { blastRadius, DEFAULT_BLAST_OPTIONS } from "@arcstar/graph";
 import { ClaimSchema, EdgeSchema, NodeSchema, SourceSchema } from "@arcstar/contracts";
 import { demoClaim, demoSources } from "./data/demo.js";
-import { maritimeGraph, maritimeNodes, maritimeEdges } from "./data/maritime.js";
+import { maritimeGraph } from "./data/maritime.js";
 
 
 function coerceDate(key: string) {

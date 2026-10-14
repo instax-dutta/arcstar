@@ -3,17 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { ClaimSchema, SourceSchema } from "@arcstar/contracts";
-import type { ContradictingClaim } from "@arcstar/credibility";
 import { scoreClaim } from "@arcstar/credibility";
 
-interface EvalRecord {
-  id: string;
-  label: "true" | "false" | "ambiguous";
-  claim: unknown;
-  allSources: unknown[];
-  contradictingClaims?: ContradictingClaim[];
-  notes: string;
-}
 
 const sourceSchema = z.preprocess((value) => {
   if (value && typeof value === "object" && "publishedAt" in value) {
@@ -55,11 +46,9 @@ function aucTrueFalse(rows: { label: string; score: number }[]): number {
     i = j + 1;
   }
   let sumPos = 0;
-  let posIndex = 0;
   for (let r = 0; r < ranked.length; r++) {
     if (ranked[r]!.label === "true") sumPos += ranks.get(r)!;
   }
-  void posIndex;
   const u = sumPos - (positives.length * (positives.length + 1)) / 2;
   return u / (positives.length * negatives.length);
 }
@@ -121,4 +110,4 @@ const reportDir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", ".."
 mkdirSync(reportDir, { recursive: true });
 writeFileSync(join(reportDir, "pilot.v1.json"), JSON.stringify(report, null, 2) + "\n");
 
-console.log(JSON.stringify(report, null, 2));
+console.warn(JSON.stringify(report, null, 2));
