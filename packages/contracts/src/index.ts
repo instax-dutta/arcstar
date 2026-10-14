@@ -168,3 +168,37 @@ export type Edge = z.infer<typeof EdgeSchema>;
 export type IndependentSource = z.infer<typeof IndependentSourceSchema>;
 export type ContradictionEntry = z.infer<typeof ContradictionEntrySchema>;
 export type ScoreExplanation = z.infer<typeof ScoreExplanationSchema>;
+
+export const ClaimStanceSchema = z.enum(["supports", "contradicts", "qualifies", "mentions"]);
+
+export const ClaimEvidenceSchema = z
+  .object({
+    claimId: NonEmptyString,
+    sourceId: NonEmptyString,
+    stance: ClaimStanceSchema,
+    passage: NonEmptyString.optional(),
+    passageStart: z.number().int().min(0).optional(),
+    passageEnd: z.number().int().min(0).optional(),
+    methodVersion: NonEmptyString.optional(),
+    status: z.enum(["resolved", "unresolved", "disputed"]).default("unresolved"),
+  })
+  .superRefine((evidence, ctx) => {
+    if (evidence.passageStart !== undefined && evidence.passageEnd !== undefined && evidence.passageEnd < evidence.passageStart) {
+      ctx.addIssue({ code: "custom", path: ["passageEnd"], message: "passageEnd must be >= passageStart" });
+    }
+  });
+
+export const SourceLineageKindSchema = z.enum(["cites", "syndicates", "quotes", "shared_release", "inferred", "unknown"]);
+
+export const SourceLineageSchema = z.object({
+  fromSourceId: NonEmptyString,
+  toSourceId: NonEmptyString,
+  kind: SourceLineageKindSchema,
+  status: z.enum(["observed", "verified", "disputed", "unknown"]),
+  evidence: NonEmptyString.optional(),
+});
+
+export type ClaimStance = z.infer<typeof ClaimStanceSchema>;
+export type ClaimEvidence = z.infer<typeof ClaimEvidenceSchema>;
+export type SourceLineageKind = z.infer<typeof SourceLineageKindSchema>;
+export type SourceLineage = z.infer<typeof SourceLineageSchema>;
