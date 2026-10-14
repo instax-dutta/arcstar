@@ -102,7 +102,7 @@ function findClaimTrigger(sentence: string): string | undefined {
 export function extractEntitySpans(text: string, terms: EntityTerm[]): EntitySpan[] {
   const spans: EntitySpan[] = [];
   for (const term of terms) {
-    const variants = [term.label, ...(term.aliases ?? [])];
+    const variants = [...new Set([term.label, ...(term.aliases ?? [])])];
     for (const variant of variants) {
       if (variant.trim().length === 0) continue;
       const pattern = new RegExp(`\\b${escapeRegExp(variant)}\\b`, "gi");

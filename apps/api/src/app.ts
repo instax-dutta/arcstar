@@ -15,7 +15,8 @@ const config = loadConfig(process.env);
 const MAX_NODES = 2000;
 const MAX_EDGES = 10000;
 const MAX_SOURCES = 20000;
-const MAX_TEXT_LENGTH = 100000;
+const MAX_TEXT_LENGTH = 20000;
+const MAX_EVIDENCE_NODES = 200;
 
 
 function coerceDate(key: string) {
@@ -78,7 +79,7 @@ app.post("/blast-radius", zValidator("json", blastRequestSchema), (c) => {
 
 app.post(
   "/evidence/candidates",
-  zValidator("json", z.object({ text: z.string().min(1).max(MAX_TEXT_LENGTH), nodes: z.array(NodeSchema).max(MAX_NODES) })),
+  zValidator("json", z.object({ text: z.string().min(1).max(MAX_TEXT_LENGTH), nodes: z.array(NodeSchema).max(MAX_EVIDENCE_NODES) })),
   (c) => {
     const { text, nodes } = c.req.valid("json");
     return c.json(extractEvidence(text, nodes));

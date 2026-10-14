@@ -105,10 +105,8 @@ export function scoreClaim({ claim, allSources, contradictingClaims = [] }: Scor
   // question being asked is "how well is this sourced", not "what is the mean".
   const best = independent.reduce((a, b) => (a.tier <= b.tier ? a : b));
 
-  const hasPrimaryEvidence = independent.some((s) => {
-    const src = allSources.find((candidate) => candidate.id === s.sourceId);
-    return src?.primaryEvidence !== undefined;
-  });
+  const sourcesById = new Map(allSources.map((source) => [source.id, source]));
+  const hasPrimaryEvidence = independent.some((s) => sourcesById.get(s.sourceId)?.primaryEvidence !== undefined);
   const evidence = hasPrimaryEvidence ? PRIMARY_EVIDENCE_FACTOR : NO_PRIMARY_EVIDENCE_FACTOR;
 
   const base = TIER_WEIGHT[best.tier];
