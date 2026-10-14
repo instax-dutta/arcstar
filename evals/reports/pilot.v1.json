@@ -1,0 +1,21 @@
+{
+  "methodVersion": "credibility@1.0.0",
+  "pilotVersion": "pilot.v1",
+  "recordCount": 30,
+  "countsByLabel": {
+    "true": 12,
+    "false": 12,
+    "ambiguous": 6
+  },
+  "meanScoreByLabel": {
+    "true": 0.9892061784278959,
+    "false": 0.06826285614603474,
+    "ambiguous": 0.24730154460697398
+  },
+  "separationTrueMinusFalse": 0.9209433222818612,
+  "aucBinary": 1,
+  "collapseObservationCount": 12,
+  "scoreTargetAuc": 0.8,
+  "separationTarget": 0.25,
+  "notes": "Pilot only. It is a smoke benchmark, not evidence of real-world discrimination."
+}

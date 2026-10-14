@@ -1,0 +1,1418 @@
+[
+  {
+    "id": "pilot-true-0",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-0",
+      "text": "Transit claim pilot-true-0",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-0",
+        "t-wire-0",
+        "t-cascade-0"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-0",
+        "publisher": "publisher-t-root-0",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-0",
+        "publisher": "publisher-t-wire-0",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-0",
+        "publisher": "publisher-t-cascade-0",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-0"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-1",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-1",
+      "text": "Transit claim pilot-true-1",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-1",
+        "t-wire-1",
+        "t-cascade-1"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-1",
+        "publisher": "publisher-t-root-1",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-1",
+        "publisher": "publisher-t-wire-1",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-1",
+        "publisher": "publisher-t-cascade-1",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-1"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-2",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-2",
+      "text": "Transit claim pilot-true-2",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-2",
+        "t-wire-2",
+        "t-cascade-2"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-2",
+        "publisher": "publisher-t-root-2",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-2",
+        "publisher": "publisher-t-wire-2",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-2",
+        "publisher": "publisher-t-cascade-2",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-2"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-3",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-3",
+      "text": "Transit claim pilot-true-3",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-3",
+        "t-wire-3",
+        "t-cascade-3"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-3",
+        "publisher": "publisher-t-root-3",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-3",
+        "publisher": "publisher-t-wire-3",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-3",
+        "publisher": "publisher-t-cascade-3",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-3"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-4",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-4",
+      "text": "Transit claim pilot-true-4",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-4",
+        "t-wire-4",
+        "t-cascade-4"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-4",
+        "publisher": "publisher-t-root-4",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-4",
+        "publisher": "publisher-t-wire-4",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-4",
+        "publisher": "publisher-t-cascade-4",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-4"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-5",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-5",
+      "text": "Transit claim pilot-true-5",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-5",
+        "t-wire-5",
+        "t-cascade-5"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-5",
+        "publisher": "publisher-t-root-5",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-5",
+        "publisher": "publisher-t-wire-5",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-5",
+        "publisher": "publisher-t-cascade-5",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-5"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-6",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-6",
+      "text": "Transit claim pilot-true-6",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-6",
+        "t-wire-6",
+        "t-cascade-6"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-6",
+        "publisher": "publisher-t-root-6",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-6",
+        "publisher": "publisher-t-wire-6",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-6",
+        "publisher": "publisher-t-cascade-6",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-6"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-7",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-7",
+      "text": "Transit claim pilot-true-7",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-7",
+        "t-wire-7",
+        "t-cascade-7"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-7",
+        "publisher": "publisher-t-root-7",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-7",
+        "publisher": "publisher-t-wire-7",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-7",
+        "publisher": "publisher-t-cascade-7",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-7"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-8",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-8",
+      "text": "Transit claim pilot-true-8",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-8",
+        "t-wire-8",
+        "t-cascade-8"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-8",
+        "publisher": "publisher-t-root-8",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-8",
+        "publisher": "publisher-t-wire-8",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-8",
+        "publisher": "publisher-t-cascade-8",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-8"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-9",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-9",
+      "text": "Transit claim pilot-true-9",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-9",
+        "t-wire-9",
+        "t-cascade-9"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-9",
+        "publisher": "publisher-t-root-9",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-9",
+        "publisher": "publisher-t-wire-9",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-9",
+        "publisher": "publisher-t-cascade-9",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-9"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-10",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-10",
+      "text": "Transit claim pilot-true-10",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-10",
+        "t-wire-10",
+        "t-cascade-10"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-10",
+        "publisher": "publisher-t-root-10",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-10",
+        "publisher": "publisher-t-wire-10",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-10",
+        "publisher": "publisher-t-cascade-10",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-10"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-true-11",
+    "label": "true",
+    "claim": {
+      "id": "pilot-true-11",
+      "text": "Transit claim pilot-true-11",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "t-root-11",
+        "t-wire-11",
+        "t-cascade-11"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.9
+    },
+    "allSources": [
+      {
+        "id": "t-root-11",
+        "publisher": "publisher-t-root-11",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-wire-11",
+        "publisher": "publisher-t-wire-11",
+        "tier": 1,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [],
+        "primaryEvidence": "observed transit data"
+      },
+      {
+        "id": "t-cascade-11",
+        "publisher": "publisher-t-cascade-11",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "t-root-11"
+        ]
+      }
+    ],
+    "contradictingClaims": [],
+    "notes": "Two independent primary wires plus one cascade. Expected higher score."
+  },
+  {
+    "id": "pilot-false-0",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-0",
+      "text": "Transit claim pilot-false-0",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-0",
+        "f-cascade-a-0",
+        "f-cascade-b-0"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-0",
+        "publisher": "publisher-f-root-0",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-0",
+        "publisher": "publisher-f-cascade-a-0",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-0"
+        ]
+      },
+      {
+        "id": "f-cascade-b-0",
+        "publisher": "publisher-f-cascade-b-0",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-0"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-0",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-1",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-1",
+      "text": "Transit claim pilot-false-1",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-1",
+        "f-cascade-a-1",
+        "f-cascade-b-1"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-1",
+        "publisher": "publisher-f-root-1",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-1",
+        "publisher": "publisher-f-cascade-a-1",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-1"
+        ]
+      },
+      {
+        "id": "f-cascade-b-1",
+        "publisher": "publisher-f-cascade-b-1",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-1"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-1",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-2",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-2",
+      "text": "Transit claim pilot-false-2",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-2",
+        "f-cascade-a-2",
+        "f-cascade-b-2"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-2",
+        "publisher": "publisher-f-root-2",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-2",
+        "publisher": "publisher-f-cascade-a-2",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-2"
+        ]
+      },
+      {
+        "id": "f-cascade-b-2",
+        "publisher": "publisher-f-cascade-b-2",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-2"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-2",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-3",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-3",
+      "text": "Transit claim pilot-false-3",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-3",
+        "f-cascade-a-3",
+        "f-cascade-b-3"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-3",
+        "publisher": "publisher-f-root-3",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-3",
+        "publisher": "publisher-f-cascade-a-3",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-3"
+        ]
+      },
+      {
+        "id": "f-cascade-b-3",
+        "publisher": "publisher-f-cascade-b-3",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-3"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-3",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-4",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-4",
+      "text": "Transit claim pilot-false-4",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-4",
+        "f-cascade-a-4",
+        "f-cascade-b-4"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-4",
+        "publisher": "publisher-f-root-4",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-4",
+        "publisher": "publisher-f-cascade-a-4",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-4"
+        ]
+      },
+      {
+        "id": "f-cascade-b-4",
+        "publisher": "publisher-f-cascade-b-4",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-4"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-4",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-5",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-5",
+      "text": "Transit claim pilot-false-5",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-5",
+        "f-cascade-a-5",
+        "f-cascade-b-5"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-5",
+        "publisher": "publisher-f-root-5",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-5",
+        "publisher": "publisher-f-cascade-a-5",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-5"
+        ]
+      },
+      {
+        "id": "f-cascade-b-5",
+        "publisher": "publisher-f-cascade-b-5",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-5"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-5",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-6",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-6",
+      "text": "Transit claim pilot-false-6",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-6",
+        "f-cascade-a-6",
+        "f-cascade-b-6"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-6",
+        "publisher": "publisher-f-root-6",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-6",
+        "publisher": "publisher-f-cascade-a-6",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-6"
+        ]
+      },
+      {
+        "id": "f-cascade-b-6",
+        "publisher": "publisher-f-cascade-b-6",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-6"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-6",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-7",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-7",
+      "text": "Transit claim pilot-false-7",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-7",
+        "f-cascade-a-7",
+        "f-cascade-b-7"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-7",
+        "publisher": "publisher-f-root-7",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-7",
+        "publisher": "publisher-f-cascade-a-7",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-7"
+        ]
+      },
+      {
+        "id": "f-cascade-b-7",
+        "publisher": "publisher-f-cascade-b-7",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-7"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-7",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-8",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-8",
+      "text": "Transit claim pilot-false-8",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-8",
+        "f-cascade-a-8",
+        "f-cascade-b-8"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-8",
+        "publisher": "publisher-f-root-8",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-8",
+        "publisher": "publisher-f-cascade-a-8",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-8"
+        ]
+      },
+      {
+        "id": "f-cascade-b-8",
+        "publisher": "publisher-f-cascade-b-8",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-8"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-8",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-9",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-9",
+      "text": "Transit claim pilot-false-9",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-9",
+        "f-cascade-a-9",
+        "f-cascade-b-9"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-9",
+        "publisher": "publisher-f-root-9",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-9",
+        "publisher": "publisher-f-cascade-a-9",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-9"
+        ]
+      },
+      {
+        "id": "f-cascade-b-9",
+        "publisher": "publisher-f-cascade-b-9",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-9"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-9",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-10",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-10",
+      "text": "Transit claim pilot-false-10",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-10",
+        "f-cascade-a-10",
+        "f-cascade-b-10"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-10",
+        "publisher": "publisher-f-root-10",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-10",
+        "publisher": "publisher-f-cascade-a-10",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-10"
+        ]
+      },
+      {
+        "id": "f-cascade-b-10",
+        "publisher": "publisher-f-cascade-b-10",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-10"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-10",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-false-11",
+    "label": "false",
+    "claim": {
+      "id": "pilot-false-11",
+      "text": "Transit claim pilot-false-11",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "f-root-11",
+        "f-cascade-a-11",
+        "f-cascade-b-11"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.4
+    },
+    "allSources": [
+      {
+        "id": "f-root-11",
+        "publisher": "publisher-f-root-11",
+        "tier": 5,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "f-cascade-a-11",
+        "publisher": "publisher-f-cascade-a-11",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-11"
+        ]
+      },
+      {
+        "id": "f-cascade-b-11",
+        "publisher": "publisher-f-cascade-b-11",
+        "tier": 4,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": [
+          "f-root-11"
+        ]
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "ref-11",
+        "score": 0.8,
+        "reason": "dataset contradicts transit drop"
+      }
+    ],
+    "notes": "Single anonymous root with two cascades. Expected collapse to one independent source."
+  },
+  {
+    "id": "pilot-ambiguous-0",
+    "label": "ambiguous",
+    "claim": {
+      "id": "pilot-ambiguous-0",
+      "text": "Transit claim pilot-ambiguous-0",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "a-primary-0",
+        "a-secondary-0"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.6
+    },
+    "allSources": [
+      {
+        "id": "a-primary-0",
+        "publisher": "publisher-a-primary-0",
+        "tier": 2,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "a-secondary-0",
+        "publisher": "publisher-a-secondary-0",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "amb-ref-0",
+        "score": 0.4,
+        "reason": "conflicting readings"
+      }
+    ],
+    "notes": "Mixed sources and contradictory evidence. Not forced into binary classification."
+  },
+  {
+    "id": "pilot-ambiguous-1",
+    "label": "ambiguous",
+    "claim": {
+      "id": "pilot-ambiguous-1",
+      "text": "Transit claim pilot-ambiguous-1",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "a-primary-1",
+        "a-secondary-1"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.6
+    },
+    "allSources": [
+      {
+        "id": "a-primary-1",
+        "publisher": "publisher-a-primary-1",
+        "tier": 2,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "a-secondary-1",
+        "publisher": "publisher-a-secondary-1",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "amb-ref-1",
+        "score": 0.4,
+        "reason": "conflicting readings"
+      }
+    ],
+    "notes": "Mixed sources and contradictory evidence. Not forced into binary classification."
+  },
+  {
+    "id": "pilot-ambiguous-2",
+    "label": "ambiguous",
+    "claim": {
+      "id": "pilot-ambiguous-2",
+      "text": "Transit claim pilot-ambiguous-2",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "a-primary-2",
+        "a-secondary-2"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.6
+    },
+    "allSources": [
+      {
+        "id": "a-primary-2",
+        "publisher": "publisher-a-primary-2",
+        "tier": 2,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "a-secondary-2",
+        "publisher": "publisher-a-secondary-2",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "amb-ref-2",
+        "score": 0.4,
+        "reason": "conflicting readings"
+      }
+    ],
+    "notes": "Mixed sources and contradictory evidence. Not forced into binary classification."
+  },
+  {
+    "id": "pilot-ambiguous-3",
+    "label": "ambiguous",
+    "claim": {
+      "id": "pilot-ambiguous-3",
+      "text": "Transit claim pilot-ambiguous-3",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "a-primary-3",
+        "a-secondary-3"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.6
+    },
+    "allSources": [
+      {
+        "id": "a-primary-3",
+        "publisher": "publisher-a-primary-3",
+        "tier": 2,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "a-secondary-3",
+        "publisher": "publisher-a-secondary-3",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "amb-ref-3",
+        "score": 0.4,
+        "reason": "conflicting readings"
+      }
+    ],
+    "notes": "Mixed sources and contradictory evidence. Not forced into binary classification."
+  },
+  {
+    "id": "pilot-ambiguous-4",
+    "label": "ambiguous",
+    "claim": {
+      "id": "pilot-ambiguous-4",
+      "text": "Transit claim pilot-ambiguous-4",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "a-primary-4",
+        "a-secondary-4"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.6
+    },
+    "allSources": [
+      {
+        "id": "a-primary-4",
+        "publisher": "publisher-a-primary-4",
+        "tier": 2,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "a-secondary-4",
+        "publisher": "publisher-a-secondary-4",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "amb-ref-4",
+        "score": 0.4,
+        "reason": "conflicting readings"
+      }
+    ],
+    "notes": "Mixed sources and contradictory evidence. Not forced into binary classification."
+  },
+  {
+    "id": "pilot-ambiguous-5",
+    "label": "ambiguous",
+    "claim": {
+      "id": "pilot-ambiguous-5",
+      "text": "Transit claim pilot-ambiguous-5",
+      "subjectNodeId": "hormuz",
+      "assertedAt": "2026-01-01T00:00:00.000Z",
+      "supportingSourceIds": [
+        "a-primary-5",
+        "a-secondary-5"
+      ],
+      "contradictingSourceIds": [],
+      "extractionConfidence": 0.6
+    },
+    "allSources": [
+      {
+        "id": "a-primary-5",
+        "publisher": "publisher-a-primary-5",
+        "tier": 2,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      },
+      {
+        "id": "a-secondary-5",
+        "publisher": "publisher-a-secondary-5",
+        "tier": 3,
+        "publishedAt": "2026-01-01T00:00:00.000Z",
+        "citesSourceIds": []
+      }
+    ],
+    "contradictingClaims": [
+      {
+        "claimId": "amb-ref-5",
+        "score": 0.4,
+        "reason": "conflicting readings"
+      }
+    ],
+    "notes": "Mixed sources and contradictory evidence. Not forced into binary classification."
+  }
+]
