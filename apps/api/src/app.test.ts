@@ -27,6 +27,26 @@ describe("cors and request limits", () => {
     expect(res.status).toBe(413);
   });
 
+  it("rejects invalid dates instead of storing an Invalid Date", async () => {
+    const res = await app.request("/score", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        claim: {
+          id: "c1",
+          text: "test",
+          subjectNodeId: "n1",
+          assertedAt: "not-a-date",
+          supportingSourceIds: [],
+          contradictingSourceIds: [],
+          extractionConfidence: 0.5,
+        },
+        allSources: [],
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
   it("rejects oversized evidence text", async () => {
     const res = await app.request("/evidence/candidates", {
       method: "POST",

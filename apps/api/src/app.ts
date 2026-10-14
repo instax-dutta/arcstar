@@ -25,7 +25,10 @@ function coerceDate(key: string) {
   return (value: unknown) => {
     if (value && typeof value === "object") {
       const obj = value as Record<string, unknown>;
-      if (obj[key] !== undefined) return { ...obj, [key]: new Date(obj[key] as string | number | Date) };
+      if (obj[key] !== undefined) {
+        const parsed = new Date(obj[key] as string | number | Date);
+        if (!Number.isNaN(parsed.getTime())) return { ...obj, [key]: parsed };
+      }
     }
     return value;
   };
