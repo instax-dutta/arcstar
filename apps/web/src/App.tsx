@@ -12,30 +12,49 @@ interface ClaimCandidate { id: string; sentence: string; trigger: string; start:
 interface EntitySpan { termId: string; matchedAlias: string; start: number; end: number; }
 interface EvidenceExtraction { normalizedText: string; candidates: ClaimCandidate[]; entitySpans: EntitySpan[]; }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown request failure";
+}
+
 export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const sigmaRef = useRef<Sigma | null>(null);
   const [graphData, setGraphData] = useState<GraphPayload | null>(null);
+  const [graphError, setGraphError] = useState<string | null>(null);
   const [results, setResults] = useState<BlastResult[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [draftText, setDraftText] = useState("Strait of Hormuz transit halts. European Union confirms rerouting.");
   const [evidence, setEvidence] = useState<EvidenceExtraction | null>(null);
+  const [evidenceError, setEvidenceError] = useState<string | null>(null);
 
   useEffect(() => {
     void fetch("/api/graph")
-      .then((r) => r.json())
-      .then((data: GraphPayload) => setGraphData(data));
+      .then((r) => {
+        if (!r.ok) throw new Error(`graph request failed with HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: GraphPayload) => {
+        setGraphData(data);
+        setGraphError(null);
+      })
+      .catch((error: unknown) => setGraphError(errorMessage(error)));
   }, []);
 
   async function extractEvidence() {
     if (!graphData) return;
-    const response = await fetch("/api/evidence/candidates", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text: draftText, nodes: graphData.nodes }),
-    });
-    const body = (await response.json()) as EvidenceExtraction;
-    setEvidence(body);
+    setEvidenceError(null);
+    try {
+      const response = await fetch("/api/evidence/candidates", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: draftText, nodes: graphData.nodes }),
+      });
+      if (!response.ok) throw new Error(`evidence request failed with HTTP ${response.status}`);
+      const body = (await response.json()) as EvidenceExtraction;
+      setEvidence(body);
+    } catch (error: unknown) {
+      setEvidence(null);
+      setEvidenceError(errorMessage(error));
+    }
   }
 
   useEffect(() => {
@@ -63,13 +82,16 @@ export function App() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       })
-        .then((r) => r.json())
-        .then((body: { results: BlastResult[] }) => setResults(body.results));
+        .then((r) => {
+          if (!r.ok) throw new Error(`blast-radius request failed with HTTP ${r.status}`);
+          return r.json();
+        })
+        .then((body: { results: BlastResult[] }) => setResults(body.results))
+        .catch(() => setResults([]));
     });
-    sigmaRef.current = sigma;
+
     return () => {
       sigma.kill();
-      sigmaRef.current = null;
     };
   }, [graphData]);
 
@@ -78,6 +100,7 @@ export function App() {
       <div id="graph" ref={containerRef} />
       <div className="panel">
         <h2>Arcstar</h2>
+        {graphError ? <p className="error">Could not load graph: {graphError}</p> : null}
         {selected ? <p>Disrupted: {selected}</p> : <p>Click a node to compute blast radius.</p>}
         {results.map((result) => (
           <div className="node-item" key={result.node}>
@@ -96,8 +119,9 @@ export function App() {
           <button type="button" onClick={() => void extractEvidence()} disabled={!graphData}>
             Extract claim candidates
           </button>
+          {evidenceError ? <p className="error">Evidence request failed: {evidenceError}</p> : null}
 
-          {evidence && (
+          {evidence ? (
             <div>
               <h4>Claim candidates</h4>
               {evidence.candidates.map((candidate) => (
@@ -108,12 +132,12 @@ export function App() {
 
               <h4>Entity matches</h4>
               {evidence.entitySpans.map((span) => (
-                <div className="node-item" key={`${span.termId}-${span.start}`}>
+                <div className="node-item" key={`${span.termId}-${span.start}-${span.end}-${span.matchedAlias}`}>
                   <strong>{span.termId}</strong> - {span.matchedAlias}
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
         </section>
       </div>
     </div>
