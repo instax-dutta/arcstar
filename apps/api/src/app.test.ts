@@ -8,12 +8,23 @@ function node(id: string): Node {
 }
 
 describe("cors and request limits", () => {
+  const maxBodyBytes = 8 * 1024 * 1024;
+
   it("allows the configured development origin and blocks others", async () => {
     const allowed = await app.request("/health", { headers: { origin: "http://localhost:5173" } });
     expect(allowed.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
 
     const blocked = await app.request("/health", { headers: { origin: "http://evil.example" } });
     expect(blocked.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("rejects oversized bodies before parsing them", async () => {
+    const res = await app.request("/health", {
+      method: "POST",
+      body: "x",
+      headers: { "content-length": String(maxBodyBytes + 1) },
+    });
+    expect(res.status).toBe(413);
   });
 
   it("rejects oversized evidence text", async () => {

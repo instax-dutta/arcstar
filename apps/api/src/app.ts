@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { bodyLimit } from "hono/body-limit";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { scoreClaim } from "@arcstar/credibility";
@@ -17,6 +18,7 @@ const MAX_EDGES = 10000;
 const MAX_SOURCES = 20000;
 const MAX_TEXT_LENGTH = 20000;
 const MAX_EVIDENCE_NODES = 200;
+const MAX_BODY_BYTES = 8 * 1024 * 1024;
 
 
 function coerceDate(key: string) {
@@ -35,6 +37,7 @@ const HttpEdgeSchema = z.preprocess(coerceDate("asOf"), EdgeSchema);
 
 export const app = new Hono();
 
+app.use("*", bodyLimit({ maxSize: MAX_BODY_BYTES }));
 app.use("*", cors({ origin: (origin) => (origin && config.corsOrigins.includes(origin) ? origin : undefined) }));
 
 app.get("/health", (c) => c.json({ ok: true }));
