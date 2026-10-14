@@ -23,7 +23,7 @@ function fakeSql(response: QueryResult<unknown>, calls: Array<{ sql: string; par
 }
 
 describe("PostgresAssessmentRepository", () => {
-  it("appends assessments with deterministic ids", async () => {
+  it("appends assessments with unique ids", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql({ rows: [] }, calls);
     const assessment = AssessmentSchema.parse({
@@ -33,7 +33,8 @@ describe("PostgresAssessmentRepository", () => {
       assessedAt: new Date("2026-10-14T00:00:00Z"),
     });
     await new PostgresAssessmentRepository(sql).append(assessment);
-    expect(calls[0]?.params?.[0]).toBe("c1:2026-10-14T00:00:00.000Z");
+    await new PostgresAssessmentRepository(sql).append(assessment);
+    expect(calls[0]?.params?.[0]).not.toBe(calls[1]?.params?.[0]);
     expect(calls[0]?.sql).toContain("INSERT INTO assessment");
   });
 

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { AssessmentSchema, type Assessment } from "@arcstar/contracts";
 import type { AssessmentRepository } from "./types.js";
 import type { SqlClient } from "./postgres.js";
@@ -26,10 +27,12 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
          explanation = EXCLUDED.explanation,
          contradiction = EXCLUDED.contradiction`,
       [
-        `${assessment.claimId}:${assessment.assessedAt.toISOString()}`,
+        randomUUID(),
         assessment.claimId,
         assessment.score.methodVersion,
         assessment.assessedAt,
+        // shortcut: the assessment row has no materialized input snapshot yet; the Assessment
+        // contract carries the claim id but not its source set. Upgrade when snapshots have ids.
         assessment.claimId,
         assessment.score.value,
         JSON.stringify(assessment.explanation),
