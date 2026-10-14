@@ -29,7 +29,7 @@ run() {
 if [ -n "$1" ]; then
   run "$1"
 else
-  for pkg in contracts credibility graph; do
+  for pkg in contracts credibility graph extraction api; do
     run "$pkg"
   done
 fi
