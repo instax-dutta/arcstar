@@ -36,14 +36,18 @@ proven by tests.
 | 0 | Monorepo, contracts, CI, purity gate | Complete |
 | 1 | Credibility core, invariants, golden snapshots | Complete |
 | 2 | Graph core, blast radius, as-of dating | Complete for blast radius; min-cut deferred |
-| 3 | Ingest adapters and HTTP API | Basic API implemented; adapters not yet built |
-| 4 | Web application | Basic Sigma.js MVP implemented |
-| 5 | 300-claim benchmark (AUC >= 0.80) | Not yet built; project go/no-go gate |
-| 6 | Hardening, versioning, self-hosting | Not started |
+| 3 | Evaluation protocol and benchmark pilot | Smoke pilot runner and report exist; real labelled corpus does not |
+| 4 | Evidence contracts, persistence, migrations, repositories | Contracts, migration, in-memory and PostgreSQL repositories exist; full integration pending |
+| 5 | Source adapters and reliable ingestion | RSS fixture adapter and idempotent ingestion exist; worker, retries, freshness pending |
+| 6 | Claim extraction, entity resolution, evidence review | Deterministic candidates and entity spans exist; LLM, review, quality metrics pending |
+| 7 | Evidence-backed dependency corpus and scenarios | Maritime graph seeds and blast tests exist; expert scenario corpus incomplete |
+| 8 | API and investigation UI | API and graph MVP plus evidence extraction endpoint; full investigation workflow incomplete |
+| 9 | Hardening, self-hosting, limited beta | Compose, config validation, and docs started; security and operations hardening incomplete |
 
-Current automated status across all packages: 100% statement, branch, function, and
-line coverage on `packages/contracts`, `packages/credibility`, and `packages/graph`;
-all 178 tests pass; the purity gate passes in both directions.
+All 211 tests pass. The pure packages (`contracts`, `credibility`, `graph`,
+`extraction`) keep a 100% coverage gate on statements, branches, functions, and lines;
+the API tracks risks in coverage but does not yet claim completeness. The purity gate
+passes.
 
 ## Monorepo structure
 
@@ -51,13 +55,19 @@ all 178 tests pass; the purity gate passes in both directions.
 arcstar/
   AGENTS.md                     # DOX contract and package index
   PLAN.md                       # governing build plan
+  IMPLEMENTATION_PLAN.md        # phase order and exit gates
   packages/
     contracts/                  # Zod schemas, the wire contract
     credibility/                # pure scoring engine
     graph/                      # dependency graph and blast radius
+    extraction/                 # pure claim and entity candidate extraction
   apps/
     api/                        # Hono HTTP boundary
     web/                        # Vite + React + Sigma.js product surface
+  evals/                        # benchmark dataset and reporting
+  migrations/                   # PostgreSQL schema migrations
+  docs/
+    self-hosting.md             # local and Compose deployment notes
   scripts/
     check-purity.mjs            # I/O-freedom gate for packages/credibility
 ```
@@ -200,9 +210,14 @@ Base URL in development: `http://localhost:8787`.
 | GET | `/graph` | Demo dependency graph |
 | GET | `/claim` | Demo claim and supporting sources |
 | POST | `/score` | Score a claim against a source graph |
-| POST | `/blast-radius` | Compute blast radius for a disrupted node |
+| POST | `/blast-radius` | Compute blast radius for a bounded supplied graph |
+| POST | `/evidence/candidates` | Extract claim candidates and entity spans from text |
 
 Date fields cross the HTTP boundary as strings and are coerced at the boundary.
+
+Cross-origin access is allowlist-based. Set `CORS_ALLOWED_ORIGINS` to a comma-separated
+list of `http://` or `https://` origins. Development defaults to
+`http://localhost:5173`; production defaults to no cross-origin origins.
 
 ## Falsifiable acceptance criteria
 
@@ -247,6 +262,12 @@ pnpm typecheck
 pnpm lint
 pnpm test
 pnpm purity
+```
+
+Run the smoke benchmark pilot:
+
+```bash
+pnpm eval
 ```
 
 Start the API (default port 8787):

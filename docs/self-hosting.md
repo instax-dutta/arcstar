@@ -37,6 +37,7 @@ The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`.
 | `PORT` | API port | `8787` |
 | `NODE_ENV` | Runtime environment | `development` |
 | `LOG_LEVEL` | Reserved for future structured logging | `info` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated allowed browser origins | `http://localhost:5173` in development, empty in production |
 | `POSTGRES_USER` | PostgreSQL user | `arcstar` |
 | `POSTGRES_PASSWORD` | PostgreSQL password | `arcstar` |
 | `POSTGRES_DB` | PostgreSQL database | `arcstar` |
@@ -44,11 +45,13 @@ The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`.
 
 ## Database migrations
 
-Canonical migration files live in `migrations/`. Apply them with your PostgreSQL client
-or migration tool:
+Canonical migration files live in `migrations/`. Apply them in order with your PostgreSQL
+client or migration tool:
 
 ```bash
-psql "$DATABASE_URL" -f migrations/001_initial_schema.sql
+for migration in migrations/*.sql; do
+  psql "$DATABASE_URL" -f "$migration"
+done
 ```
 
 The API currently serves deterministic scoring and graph endpoints from pure packages and
