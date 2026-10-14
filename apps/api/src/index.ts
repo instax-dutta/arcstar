@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { app } from "./app.js";
+import { loadConfig } from "./config.js";
 
-const port = Number(process.env.PORT ?? 8787);
-serve({ fetch: app.fetch, port });
-console.warn(`arcstar api listening on http://localhost:${port}`);
+const config = loadConfig(process.env);
+serve({ fetch: app.fetch, port: config.port });
+console.warn(`arcstar api listening on http://localhost:${config.port}`);
