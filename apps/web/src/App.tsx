@@ -8,18 +8,35 @@ interface BlastResult { node: string; hops: number; impactScore: number; path: s
 
 interface GraphPayload { nodes: WebNode[]; edges: WebEdge[]; }
 
+interface ClaimCandidate { id: string; sentence: string; trigger: string; start: number; end: number; }
+interface EntitySpan { termId: string; matchedAlias: string; start: number; end: number; }
+interface EvidenceExtraction { normalizedText: string; candidates: ClaimCandidate[]; entitySpans: EntitySpan[]; }
+
 export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
   const [graphData, setGraphData] = useState<GraphPayload | null>(null);
   const [results, setResults] = useState<BlastResult[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [draftText, setDraftText] = useState("Strait of Hormuz transit halts. European Union confirms rerouting.");
+  const [evidence, setEvidence] = useState<EvidenceExtraction | null>(null);
 
   useEffect(() => {
     void fetch("/api/graph")
       .then((r) => r.json())
       .then((data: GraphPayload) => setGraphData(data));
   }, []);
+
+  async function extractEvidence() {
+    if (!graphData) return;
+    const response = await fetch("/api/evidence/candidates", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: draftText, nodes: graphData.nodes }),
+    });
+    const body = (await response.json()) as EvidenceExtraction;
+    setEvidence(body);
+  }
 
   useEffect(() => {
     if (!containerRef.current || !graphData) return;
@@ -67,6 +84,37 @@ export function App() {
             <strong>{result.node}</strong> - {result.impactScore.toFixed(3)} (hop {result.hops})
           </div>
         ))}
+
+        <section className="evidence">
+          <h3>Evidence extraction</h3>
+          <textarea
+            aria-label="Evidence text"
+            value={draftText}
+            onChange={(event) => setDraftText(event.target.value)}
+            rows={4}
+          />
+          <button type="button" onClick={() => void extractEvidence()} disabled={!graphData}>
+            Extract claim candidates
+          </button>
+
+          {evidence && (
+            <div>
+              <h4>Claim candidates</h4>
+              {evidence.candidates.map((candidate) => (
+                <div className="node-item" key={candidate.id}>
+                  <strong>{candidate.trigger}</strong> - {candidate.sentence}
+                </div>
+              ))}
+
+              <h4>Entity matches</h4>
+              {evidence.entitySpans.map((span) => (
+                <div className="node-item" key={`${span.termId}-${span.start}`}>
+                  <strong>{span.termId}</strong> - {span.matchedAlias}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
