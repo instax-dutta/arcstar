@@ -4,10 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    # 03:17 UTC nightly. Off the hour on purpose: the top of the hour is the
-    # most contended slot on GitHub Actions and we have no need to queue.
-    - cron: '17 3 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -52,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     # PLAN.md section 6.1: AUC >= 0.80 is the project go/no-go gate. This runs
     # nightly so a regression is visible long before anyone looks at a commit.
-    if: github.event_name == 'schedule'
+    if: false  # benchmark not implemented until Phase 5; see PLAN.md section 6.1
     steps:
       - uses: actions/checkout@v4
 
