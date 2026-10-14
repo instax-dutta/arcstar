@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { app } from "./app.js";
-import { demoClaim, demoEdges, demoNodes, demoSources } from "./data/demo.js";
+import { demoClaim, demoSources } from "./data/demo.js";
+import { maritimeEdges, maritimeNodes } from "./data/maritime.js";
 
 describe("api", () => {
   it("health", async () => {
@@ -11,8 +12,8 @@ describe("api", () => {
   it("graph", async () => {
     const res = await app.request("/graph");
     const body = await res.json() as { nodes: unknown[]; edges: unknown[] };
-    expect(body.nodes).toHaveLength(demoNodes.length);
-    expect(body.edges).toHaveLength(demoEdges.length);
+    expect(body.nodes).toHaveLength(maritimeNodes.length);
+    expect(body.edges).toHaveLength(maritimeEdges.length);
   });
 
   it("score", async () => {
@@ -31,7 +32,7 @@ describe("api", () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        graph: { nodes: demoNodes, edges: demoEdges },
+        graph: { nodes: maritimeNodes, edges: maritimeEdges },
         disruptedNode: "hormuz",
       }),
     });
