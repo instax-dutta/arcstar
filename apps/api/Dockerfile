@@ -6,8 +6,7 @@ ENV CI=true
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages ./packages
-COPY apps/api ./apps/api
+COPY . .
 
 RUN pnpm install --frozen-lockfile --filter @arcstar/api... --prod=false
 
