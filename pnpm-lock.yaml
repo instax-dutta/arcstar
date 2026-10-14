@@ -104,6 +104,24 @@ importers:
         specifier: ^6.0.0
         version: 6.4.4(@types/node@26.6.3)(lightningcss@1.33.0)(tsx@4.23.15)
 
+  evals:
+    dependencies:
+      '@arcstar/contracts':
+        specifier: workspace:*
+        version: link:../packages/contracts
+      '@arcstar/credibility':
+        specifier: workspace:*
+        version: link:../packages/credibility
+      '@arcstar/graph':
+        specifier: workspace:*
+        version: link:../packages/graph
+      tsx:
+        specifier: ^4.0.0
+        version: 4.23.15
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+
   packages/contracts:
     dependencies:
       zod:

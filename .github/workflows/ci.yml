@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -48,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     # PLAN.md section 6.1: AUC >= 0.80 is the project go/no-go gate. This runs
     # nightly so a regression is visible long before anyone looks at a commit.
-    if: false  # benchmark not implemented until Phase 5; see PLAN.md section 6.1
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 

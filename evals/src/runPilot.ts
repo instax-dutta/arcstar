@@ -53,7 +53,7 @@ function aucTrueFalse(rows: { label: string; score: number }[]): number {
   return u / (positives.length * negatives.length);
 }
 
-const filePath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "evals", "pilot", "pilot.v1.json");
+const filePath = join(dirname(fileURLToPath(import.meta.url)), "..", "pilot", "pilot.v1.json");
 const raw = JSON.parse(readFileSync(filePath, "utf8")) as unknown;
 const records = z.array(recordSchema).parse(raw);
 
@@ -106,7 +106,7 @@ const report = {
   notes: "Pilot only. It is a smoke benchmark, not evidence of real-world discrimination.",
 };
 
-const reportDir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "evals", "reports");
+const reportDir = join(dirname(fileURLToPath(import.meta.url)), "..", "reports");
 mkdirSync(reportDir, { recursive: true });
 writeFileSync(join(reportDir, "pilot.v1.json"), JSON.stringify(report, null, 2) + "\n");
 
