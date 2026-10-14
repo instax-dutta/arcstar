@@ -164,7 +164,7 @@ Use W3C PROV-O as a compatible conceptual reference for provenance, not as a man
 | 1 | Credibility core and deterministic invariants | Complete as implementation; empirical validity unproven |
 | 2 | Dependency graph core and as-of resolution | Core blast-radius behavior implemented; graph corpus and min-cut deferred |
 | 3 | Evaluation protocol and benchmark pilot | Synthetic pilot runner and report exist; real labelled corpus and leakage checks remain |
-| 4 | Evidence contracts, persistence, migrations, repositories | Partial: contracts, migrations, in-memory and initial PostgreSQL repositories; full integration not proven |
+| 4 | Evidence contracts, persistence, migrations, repositories | Partial: contracts, migrations, in-memory and PostgreSQL source/entity/edge/claim/assessment repositories; full integration not proven |
 | 5 | Source adapters and reliable ingestion pipeline | Partial: RSS/Atom fixture adapter and idempotent ingestion implemented; worker, retries, and freshness visibility remain |
 | 6 | Claim extraction, entity resolution, evidence review | Partial: deterministic candidate and entity-span extraction implemented; LLM/review workflow remains |
 | 7 | Evidence-backed dependency corpus and scenario evaluation | Partial foundation; corpus/evaluation incomplete |
@@ -316,7 +316,7 @@ A reproducible benchmark report and pilot dataset exist; leakage checks pass; th
 
 **Priority: P0.**
 
-**Status: Partial. Claim-evidence, source-lineage, and assessment contracts exist. Ordered migration, in-memory repositories, PostgreSQL source and assessment repositories, and idempotent feed ingestion exist. Full repository coverage, integration tests, document/revision handling, and restart preservation remain.**
+**Status: Partial. Claim-evidence, source-lineage, and assessment contracts exist. Ordered migration, in-memory repositories, PostgreSQL source/entity/edge/claim/assessment repositories, and idempotent feed ingestion exist. Full repository coverage, integration tests, document/revision handling, and restart preservation remain.**
 
 ### Purpose
 Replace demo-only data paths with durable, auditable canonical records while preserving existing pure packages.
