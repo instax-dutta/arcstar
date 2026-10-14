@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { AssessmentSchema, type Assessment } from "@arcstar/contracts";
 import type { AssessmentRepository } from "./types.js";
-import type { SqlClient } from "./postgres.js";
+import { readStoredDate, type SqlClient } from "./postgres.js";
 
 interface AssessmentRow {
   claim_id: string;
@@ -9,10 +9,6 @@ interface AssessmentRow {
   assessed_at: Date | string;
   score: number;
   explanation: unknown;
-}
-
-function toDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
 }
 
 export class PostgresAssessmentRepository implements AssessmentRepository {
@@ -71,7 +67,7 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
       claimId: row.claim_id,
       score: { value: row.score, methodVersion: row.method_version },
       explanation: row.explanation,
-      assessedAt: toDate(row.assessed_at),
+      assessedAt: readStoredDate(row.assessed_at, "assessed_at"),
     });
   }
 }

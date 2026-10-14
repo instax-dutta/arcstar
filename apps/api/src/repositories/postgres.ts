@@ -33,6 +33,10 @@ function toDate(value: Date | string | null | undefined, field: string): Date {
   throw new Error(`${field} is required`);
 }
 
+export function readStoredDate(value: Date | string | null | undefined, field: string): Date {
+  return toDate(value, field);
+}
+
 /**
  * Maps the canonical migration schema to the engine's `Source` contract. Source
  * lineage is stored in `source_lineage`, so it is re-read as `citesSourceIds`.

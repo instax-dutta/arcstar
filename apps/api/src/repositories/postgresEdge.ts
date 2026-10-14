@@ -1,6 +1,6 @@
 import { EdgeSchema, type Edge } from "@arcstar/contracts";
 import type { EdgeRepository } from "./types.js";
-import type { SqlClient } from "./postgres.js";
+import { readStoredDate, type SqlClient } from "./postgres.js";
 
 interface EdgeRow {
   from_entity_id: string;
@@ -8,10 +8,6 @@ interface EdgeRow {
   relation_type: string;
   weight: number;
   valid_from: Date | string;
-}
-
-function toDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
 }
 
 function edgeId(edge: Edge): string {
@@ -70,7 +66,7 @@ export class PostgresEdgeRepository implements EdgeRepository {
       to: row.to_entity_id,
       relation: row.relation_type,
       weight: row.weight,
-      asOf: toDate(row.valid_from),
+      asOf: readStoredDate(row.valid_from, "valid_from"),
     });
   }
 }

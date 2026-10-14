@@ -44,4 +44,16 @@ describe("PostgresEdgeRepository", () => {
     expect(result.map((e) => e.weight)).toEqual([0.9, 0.8]);
     expect(calls[0]?.sql).toContain("ORDER BY from_entity_id, to_entity_id, relation_type, valid_from DESC, weight DESC");
   });
+
+  it("rejects invalid stored dates", async () => {
+    const sql = fakeSql(
+      {
+        rows: [
+          { from_entity_id: "a", to_entity_id: "b", relation_type: "depends_on", weight: 0.8, valid_from: "not-a-date" },
+        ],
+      },
+      [],
+    );
+    await expect(new PostgresEdgeRepository(sql).list()).rejects.toThrow(/valid_from/);
+  });
 });

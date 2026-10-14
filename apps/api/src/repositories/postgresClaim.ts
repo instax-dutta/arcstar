@@ -1,6 +1,6 @@
 import { ClaimSchema, type Claim } from "@arcstar/contracts";
 import type { ClaimRepository } from "./types.js";
-import type { SqlClient } from "./postgres.js";
+import { readStoredDate, type SqlClient } from "./postgres.js";
 
 interface ClaimRow {
   id: string;
@@ -10,10 +10,6 @@ interface ClaimRow {
   extraction_confidence: number;
   source_id: string | null;
   stance: string | null;
-}
-
-function toDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
 }
 
 export class PostgresClaimRepository implements ClaimRepository {
@@ -104,7 +100,7 @@ export class PostgresClaimRepository implements ClaimRepository {
       id: first.id,
       text: first.text,
       subjectNodeId: first.subject_entity_id,
-      assertedAt: toDate(first.asserted_at),
+      assertedAt: readStoredDate(first.asserted_at, "asserted_at"),
       supportingSourceIds: rows.filter((row) => row.stance === "supports").map((row) => row.source_id).filter((id): id is string => Boolean(id)),
       contradictingSourceIds: rows.filter((row) => row.stance === "contradicts").map((row) => row.source_id).filter((id): id is string => Boolean(id)),
       extractionConfidence: first.extraction_confidence,
