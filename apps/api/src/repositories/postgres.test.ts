@@ -16,13 +16,13 @@ function fakeSql(responses: Array<QueryResult<unknown>>, calls: Array<{ sql: str
 }
 
 describe("PostgresSourceRepository", () => {
-  it("reads source lineage into citesSourceIds", async () => {
+  it("uses published_at, not created_at, for publication time", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql(
       [
         {
           rows: [
-            { id: "s1", publisher: "A", source_tier: 2, created_at: "2026-10-14T00:00:00Z" },
+            { id: "s1", publisher: "A", source_tier: 2, published_at: "2026-10-14T00:00:00Z" },
           ],
         },
         { rows: [{ to_source_id: "s2" }] },
@@ -30,9 +30,13 @@ describe("PostgresSourceRepository", () => {
       calls,
     );
     const source = await new PostgresSourceRepository(sql).get("s1");
-    expect(source).toBeDefined();
-    expect(source?.citesSourceIds).toEqual(["s2"]);
     expect(source?.publishedAt.toISOString()).toBe("2026-10-14T00:00:00.000Z");
+    expect(source?.citesSourceIds).toEqual(["s2"]);
+  });
+
+  it("rejects a missing publication time rather than inventing one", async () => {
+    const sql = fakeSql([{ rows: [{ id: "s1", publisher: "A", source_tier: 2, published_at: null }] }], []);
+    await expect(new PostgresSourceRepository(sql).get("s1")).rejects.toThrow(/published_at/);
   });
 
   it("groups multiple citations into one source on list", async () => {
@@ -40,8 +44,8 @@ describe("PostgresSourceRepository", () => {
       [
         {
           rows: [
-            { id: "s1", publisher: "A", source_tier: 2, created_at: null, citation_id: "s2" },
-            { id: "s1", publisher: "A", source_tier: 2, created_at: null, citation_id: "s3" },
+            { id: "s1", publisher: "A", source_tier: 2, published_at: "2026-10-14T00:00:00Z", citation_id: "s2" },
+            { id: "s1", publisher: "A", source_tier: 2, published_at: "2026-10-14T00:00:00Z", citation_id: "s3" },
           ],
         },
       ],
@@ -64,6 +68,7 @@ describe("PostgresSourceRepository", () => {
     });
     await new PostgresSourceRepository(sql).upsert(source);
     expect(calls[0]?.sql).toContain("INSERT INTO source_pool");
+    expect(calls[0]?.params?.[3]).toBe(source.publishedAt);
     expect(calls[1]?.sql).toContain("DELETE FROM source_lineage");
     expect(calls).toHaveLength(4);
   });

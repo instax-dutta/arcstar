@@ -13,35 +13,44 @@ interface SourcePoolRow {
   id: string;
   publisher: string;
   source_tier: number;
-  created_at: Date | string | null;
+  published_at: Date | string | null;
 }
 
 interface SourcePoolWithCitationRow extends SourcePoolRow {
   citation_id: string | null;
 }
 
-function toDate(value: Date | string | null | undefined): Date {
-  if (value instanceof Date) return value;
-  if (typeof value === "string") return new Date(value);
-  return new Date(0);
+function toDate(value: Date | string | null | undefined, field: string): Date {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) throw new Error(`${field} is not a valid date`);
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) throw new Error(`${field} is not a valid date`);
+    return parsed;
+  }
+  throw new Error(`${field} is required`);
 }
 
 /**
  * Maps the canonical migration schema to the engine's `Source` contract. Source
  * lineage is stored in `source_lineage`, so it is re-read as `citesSourceIds`.
+ * `published_at` is publication time, not Arcstar's `created_at` observation time.
  */
 export class PostgresSourceRepository implements SourceRepository {
   constructor(private readonly sql: SqlClient) {}
 
   async upsert(source: Source): Promise<void> {
     await this.sql.query(
-      `INSERT INTO source_pool (id, publisher, source_tier, created_at, updated_at)
-       VALUES ($1, $2, $3, now(), now())
+      `INSERT INTO source_pool (id, publisher, source_tier, published_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, now(), now())
        ON CONFLICT (id) DO UPDATE SET
          publisher = EXCLUDED.publisher,
          source_tier = EXCLUDED.source_tier,
+         published_at = EXCLUDED.published_at,
          updated_at = now()`,
-      [source.id, source.publisher, source.tier],
+      [source.id, source.publisher, source.tier, source.publishedAt],
     );
 
     await this.sql.query(`DELETE FROM source_lineage WHERE from_source_id = $1`, [source.id]);
@@ -57,7 +66,7 @@ export class PostgresSourceRepository implements SourceRepository {
 
   async get(id: string): Promise<Source | undefined> {
     const pool = await this.sql.query<SourcePoolRow>(
-      `SELECT id, publisher, source_tier, created_at FROM source_pool WHERE id = $1`,
+      `SELECT id, publisher, source_tier, published_at FROM source_pool WHERE id = $1`,
       [id],
     );
     const row = pool.rows[0];
@@ -72,14 +81,14 @@ export class PostgresSourceRepository implements SourceRepository {
       id: row.id,
       publisher: row.publisher,
       tier: row.source_tier,
-      publishedAt: toDate(row.created_at),
+      publishedAt: toDate(row.published_at, "published_at"),
       citesSourceIds: lineage.rows.map((lineageRow) => lineageRow.to_source_id),
     });
   }
 
   async list(): Promise<Source[]> {
     const result = await this.sql.query<SourcePoolWithCitationRow>(
-      `SELECT sp.id, sp.publisher, sp.source_tier, sp.created_at, sl.to_source_id AS citation_id
+      `SELECT sp.id, sp.publisher, sp.source_tier, sp.published_at, sl.to_source_id AS citation_id
        FROM source_pool sp
        LEFT JOIN source_lineage sl ON sl.from_source_id = sp.id
        ORDER BY sp.id, sl.to_source_id`,
@@ -99,7 +108,7 @@ export class PostgresSourceRepository implements SourceRepository {
           id: row.id,
           publisher: row.publisher,
           tier: row.source_tier,
-          publishedAt: toDate(row.created_at),
+          publishedAt: toDate(row.published_at, "published_at"),
           citesSourceIds: row.citations,
         }),
       );
