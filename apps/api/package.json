@@ -14,6 +14,7 @@
   "dependencies": {
     "@arcstar/contracts": "workspace:*",
     "@arcstar/credibility": "workspace:*",
+    "@arcstar/extraction": "workspace:*",
     "@arcstar/graph": "workspace:*",
     "@hono/node-server": "^2.1.5",
     "hono": "^4.6.0",

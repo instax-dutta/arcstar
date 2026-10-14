@@ -63,7 +63,7 @@ export function sentenceSpans(text: string): Span[] {
     const end = match.index + match[0].length;
     spans.push({ start, end });
     start = end;
-    while (start < text.length && /\s/.test(text[start])) {
+    while (start < text.length && /\s/.test(text.charAt(start))) {
       start += 1;
     }
   }
