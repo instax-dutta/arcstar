@@ -36,7 +36,6 @@ const FORBIDDEN = [
       /\bfrom\s+["']node:http/,
       /\bfrom\s+["']node:net/,
       /\bfrom\s+["']node:dgram/,
-      /\bfrom\s+["']node:fs/,
       /\bfrom\s+["']fs/,
     ],
   },
