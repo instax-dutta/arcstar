@@ -17,5 +17,6 @@
   "collapseObservationCount": 12,
   "scoreTargetAuc": 0.8,
   "separationTarget": 0.25,
+  "passedTargets": true,
   "notes": "Pilot only. It is a smoke benchmark, not evidence of real-world discrimination."
 }

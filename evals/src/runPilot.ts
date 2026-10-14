@@ -84,6 +84,12 @@ const collapsedCorrect = rows.filter((r) => {
   return rawSupportCount > r.independentSources && r.independentSources === 1;
 }).length;
 
+const separationTrueMinusFalse = mean("true") - mean("false");
+const passedTargets =
+  Number.isFinite(auc) &&
+  auc >= 0.8 &&
+  separationTrueMinusFalse >= 0.25;
+
 const report = {
   methodVersion: "credibility@1.0.0",
   pilotVersion: "pilot.v1",
@@ -98,11 +104,12 @@ const report = {
     false: mean("false"),
     ambiguous: mean("ambiguous"),
   },
-  separationTrueMinusFalse: mean("true") - mean("false"),
+  separationTrueMinusFalse,
   aucBinary: auc,
   collapseObservationCount: collapsedCorrect,
   scoreTargetAuc: 0.8,
   separationTarget: 0.25,
+  passedTargets,
   notes: "Pilot only. It is a smoke benchmark, not evidence of real-world discrimination.",
 };
 
@@ -111,3 +118,8 @@ mkdirSync(reportDir, { recursive: true });
 writeFileSync(join(reportDir, "pilot.v1.json"), JSON.stringify(report, null, 2) + "\n");
 
 console.warn(JSON.stringify(report, null, 2));
+
+if (!passedTargets) {
+  console.error("Credibility benchmark target failed. See evals/reports/pilot.v1.json.");
+  process.exitCode = 1;
+}
