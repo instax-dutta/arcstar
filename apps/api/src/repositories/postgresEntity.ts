@@ -6,6 +6,7 @@ interface EntityRow {
   id: string;
   entity_type: string;
   label: string;
+  aliases: string[];
   external_ids: Record<string, unknown>;
 }
 
@@ -37,7 +38,7 @@ export class PostgresEntityRepository implements EntityRepository {
 
   async get(id: string): Promise<Node | undefined> {
     const result = await this.sql.query<EntityRow>(
-      `SELECT id, entity_type, label, external_ids FROM entity WHERE id = $1`,
+      `SELECT id, entity_type, label, aliases, external_ids FROM entity WHERE id = $1`,
       [id],
     );
     const row = result.rows[0];
@@ -47,7 +48,7 @@ export class PostgresEntityRepository implements EntityRepository {
 
   async list(): Promise<Node[]> {
     const result = await this.sql.query<EntityRow>(
-      `SELECT id, entity_type, label, external_ids FROM entity ORDER BY id`,
+      `SELECT id, entity_type, label, aliases, external_ids FROM entity ORDER BY id`,
     );
     return result.rows.map((row) => this.toNode(row));
   }
@@ -57,7 +58,7 @@ export class PostgresEntityRepository implements EntityRepository {
       id: row.id,
       type: row.entity_type,
       label: row.label,
-      props: row.external_ids ?? {},
+      props: { ...(row.external_ids ?? {}), aliases: row.aliases ?? [] },
     });
   }
 }

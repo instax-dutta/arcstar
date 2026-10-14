@@ -13,12 +13,26 @@ function fakeSql(response: QueryResult<unknown>, calls: Array<{ sql: string; par
 }
 
 describe("PostgresEntityRepository", () => {
-  it("maps rows to nodes and stores aliases as an array", async () => {
+  it("maps rows to nodes and preserves aliases", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
-    const sql = fakeSql({ rows: [{ id: "hormuz", entity_type: "chokepoint", label: "Strait of Hormuz", external_ids: {} }] }, calls);
+    const sql = fakeSql(
+      {
+        rows: [
+          { id: "hormuz", entity_type: "chokepoint", label: "Strait of Hormuz", aliases: ["Hormuz"], external_ids: {} },
+        ],
+      },
+      calls,
+    );
     const repo = new PostgresEntityRepository(sql);
     const node = await repo.get("hormuz");
-    expect(node).toEqual(NodeSchema.parse({ id: "hormuz", type: "chokepoint", label: "Strait of Hormuz", props: {} }));
+    expect(node).toEqual(
+      NodeSchema.parse({
+        id: "hormuz",
+        type: "chokepoint",
+        label: "Strait of Hormuz",
+        props: { aliases: ["Hormuz"] },
+      }),
+    );
 
     const source = NodeSchema.parse({
       id: "hormuz",
