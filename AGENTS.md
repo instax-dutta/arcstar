@@ -106,7 +106,8 @@ When the user requests a durable behavior change, record it here or in the relev
 
 ## Child DOX Index
 
-Three child DOX files exist. All are leaf packages under `packages/`.
+Five child DOX files exist. Four are leaf packages under `packages/`; two product
+apps live under `apps/`.
 
 - `packages/contracts/AGENTS.md` - Zod schemas shared by engine, API, and web. Changing a
   schema is a breaking change across all three consumers.
@@ -114,6 +115,9 @@ Three child DOX files exist. All are leaf packages under `packages/`.
   contradictions, explainability. Owns the purity contract and the ten invariants.
 - `packages/graph/AGENTS.md` - dependency graph, blast radius, impact propagation.
   Owns `PROPAGATION`, the table that fixes which way impact travels per relation.
+- `packages/extraction/AGENTS.md` - pure text-to-evidence helpers: normalization,
+  source spans, claim candidates, and entity span extraction. Produces candidates
+  only; never scores.
 
 - `apps/api/AGENTS.md` - Hono HTTP boundary, endpoints, demo data, date coercion.
 - `apps/web/AGENTS.md` - Vite + React + Sigma.js product surface.
