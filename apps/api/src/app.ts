@@ -7,6 +7,7 @@ import { blastRadius, DEFAULT_BLAST_OPTIONS } from "@arcstar/graph";
 import { ClaimSchema, EdgeSchema, NodeSchema, SourceSchema } from "@arcstar/contracts";
 import { demoClaim, demoSources } from "./data/demo.js";
 import { maritimeGraph } from "./data/maritime.js";
+import { extractEvidence } from "./extractEvidence.js";
 
 
 function coerceDate(key: string) {
@@ -63,4 +64,14 @@ app.post("/blast-radius", zValidator("json", blastRequestSchema), (c) => {
   const result = blastRadius(graph, disruptedNode, { ...DEFAULT_BLAST_OPTIONS, ...options });
   return c.json({ results: result });
 });
+
+app.post(
+  "/evidence/candidates",
+  zValidator("json", z.object({ text: z.string().min(1), nodes: z.array(NodeSchema) })),
+  (c) => {
+    const { text, nodes } = c.req.valid("json");
+    return c.json(extractEvidence(text, nodes));
+  },
+);
+
 
