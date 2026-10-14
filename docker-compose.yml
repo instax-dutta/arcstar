@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arcstar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arcstar}
+      POSTGRES_DB: ${POSTGRES_DB:-arcstar}
+    volumes:
+      - arcstar-postgres:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arcstar} -d ${POSTGRES_DB:-arcstar}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 8787
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-arcstar}:${POSTGRES_PASSWORD:-arcstar}@postgres:5432/${POSTGRES_DB:-arcstar}
+    ports:
+      - "127.0.0.1:8787:8787"
+
+volumes:
+  arcstar-postgres:

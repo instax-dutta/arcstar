@@ -47,6 +47,9 @@ importers:
       '@arcstar/credibility':
         specifier: workspace:*
         version: link:../../packages/credibility
+      '@arcstar/extraction':
+        specifier: workspace:*
+        version: link:../../packages/extraction
       '@arcstar/graph':
         specifier: workspace:*
         version: link:../../packages/graph
