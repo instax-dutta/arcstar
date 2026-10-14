@@ -20,7 +20,6 @@ export interface ClaimRepository {
 
 export interface EdgeRepository {
   upsert(edge: Edge): Promise<void>;
-  get(id: string): Promise<Edge | undefined>;
   list(): Promise<Edge[]>;
   listAsOf(date: Date): Promise<Edge[]>;
 }

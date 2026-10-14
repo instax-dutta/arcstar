@@ -15,7 +15,7 @@ function toDate(value: Date | string): Date {
 }
 
 function edgeId(edge: Edge): string {
-  return `${edge.from}->${edge.to}:${edge.relation}:${edge.asOf.toISOString()}`;
+  return `${edge.from}->${edge.to}:${edge.relation}:${edge.asOf.toISOString()}:${edge.weight}`;
 }
 
 export class PostgresEdgeRepository implements EdgeRepository {
@@ -36,21 +36,11 @@ export class PostgresEdgeRepository implements EdgeRepository {
     );
   }
 
-  async get(id: string): Promise<Edge | undefined> {
-    const result = await this.sql.query<EdgeRow>(
-      `SELECT from_entity_id, to_entity_id, relation_type, weight, valid_from
-       FROM dependency_edge WHERE id = $1`,
-      [id],
-    );
-    const row = result.rows[0];
-    if (!row) return undefined;
-    return this.toEdge(row);
-  }
-
   async list(): Promise<Edge[]> {
     const result = await this.sql.query<EdgeRow>(
       `SELECT from_entity_id, to_entity_id, relation_type, weight, valid_from
-       FROM dependency_edge`,
+       FROM dependency_edge
+       ORDER BY from_entity_id, to_entity_id, relation_type, valid_from DESC, weight DESC`,
     );
     return result.rows.map((row) => this.toEdge(row));
   }
@@ -61,10 +51,17 @@ export class PostgresEdgeRepository implements EdgeRepository {
          from_entity_id, to_entity_id, relation_type, weight, valid_from
        FROM dependency_edge
        WHERE valid_from <= $1
-       ORDER BY from_entity_id, to_entity_id, relation_type, valid_from DESC`,
+       ORDER BY from_entity_id, to_entity_id, relation_type, valid_from DESC, weight DESC`,
       [date],
     );
-    return result.rows.map((row) => this.toEdge(row));
+    return result.rows
+      .map((row) => this.toEdge(row))
+      .sort(
+        (a, b) =>
+          (a.from < b.from ? -1 : a.from > b.from ? 1 : 0) ||
+          (a.to < b.to ? -1 : a.to > b.to ? 1 : 0) ||
+          (a.relation < b.relation ? -1 : a.relation > b.relation ? 1 : 0),
+      );
   }
 
   private toEdge(row: EdgeRow): Edge {

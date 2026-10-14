@@ -8,6 +8,16 @@ import type {
   SourceRepository,
 } from "./types.js";
 
+function compareEdges(a: Edge, b: Edge): number {
+  return (
+    (a.from < b.from ? -1 : a.from > b.from ? 1 : 0) ||
+    (a.to < b.to ? -1 : a.to > b.to ? 1 : 0) ||
+    (a.relation < b.relation ? -1 : a.relation > b.relation ? 1 : 0) ||
+    a.asOf.getTime() - b.asOf.getTime() ||
+    a.weight - b.weight
+  );
+}
+
 export class InMemorySourceRepository implements SourceRepository {
   private readonly items = new Map<string, Source>();
   async upsert(source: Source): Promise<void> {
@@ -57,11 +67,9 @@ export class InMemoryEdgeRepository implements EdgeRepository {
   async upsert(edge: Edge): Promise<void> {
     this.items.set(this.key(edge), edge);
   }
-  async get(_id: string): Promise<Edge | undefined> {
-    return undefined;
-  }
+
   async list(): Promise<Edge[]> {
-    return [...this.items.values()].sort((a, b) => (a.from < b.from ? -1 : 1));
+    return [...this.items.values()].sort(compareEdges);
   }
   async listAsOf(date: Date): Promise<Edge[]> {
     return resolveEdgesAsOf([...this.items.values()], date);
