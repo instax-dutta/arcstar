@@ -157,10 +157,22 @@ export const ScoreExplanationSchema = z.object({
   methodVersion: NonEmptyString,
 });
 
+/**
+ * A persisted assessment: the score for one claim plus the derivation that produced it.
+ * Assessments are append-only in storage; this record is the unit that is written back.
+ */
+export const AssessmentSchema = z.object({
+  claimId: NonEmptyString,
+  score: ScoreSchema,
+  explanation: ScoreExplanationSchema,
+  assessedAt: z.date(),
+});
+
 export type SourceTier = z.infer<typeof SourceTierSchema>;
 export type Source = z.infer<typeof SourceSchema>;
 export type Claim = z.infer<typeof ClaimSchema>;
 export type Score = z.infer<typeof ScoreSchema>;
+export type Assessment = z.infer<typeof AssessmentSchema>;
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 export type Node = z.infer<typeof NodeSchema>;
 export type RelationType = z.infer<typeof RelationTypeSchema>;
