@@ -12,6 +12,8 @@ This document is the governing contract for the project. Where code, README, and
 document disagree, this document controls unless an amendment is recorded in the
 corrections section with evidence.
 
+
+**Execution roadmap:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) is the canonical phase-wise execution order, backlog, exit criteria, and release gate plan. This file remains authoritative for methodology, core contracts, graph semantics, invariants, and recorded corrections. The implementation roadmap supersedes the original phase ordering for work not yet shipped.
 ---
 
 ## 0. Thesis

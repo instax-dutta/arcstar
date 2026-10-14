@@ -8,13 +8,12 @@
 - Name: Arcstar
 - Purpose: Open-source geopolitical intelligence. Credibility scoring as infrastructure, dependency graph as the interface.
 - Answers: "if X happens, what breaks, ranked, and how confident are we in each link."
-- Status: Planning complete, zero code written. See PLAN.md for the governing build plan.
+- Status: Core credibility/graph packages and basic API/web shells are implemented; ingestion, persistence, benchmark validation, and production hardening remain incomplete. See PLAN.md for methodology and engineering contracts, and IMPLEMENTATION_PLAN.md for phase order and exit gates.
 - License: AGPL-3.0. Free and open, no accounts, no paywall.
 
 ## Project-Wide Contracts
 
-These bind every subtree and no child AGENTS.md may weaken them. PLAN.md holds the full
-rationale, phases, and acceptance criteria; this section is the short enforcement list.
+These bind every subtree and no child AGENTS.md may weaken them. PLAN.md holds methodology, architecture, invariants, and corrections; IMPLEMENTATION_PLAN.md owns the execution order and phase exit criteria. This section is the short enforcement list.
 
 - `packages/credibility` is pure: no I/O, no DB, no network, no clock. Time is injected.
   A lint rule enforces this in CI. If a scoring function needs `Date.now()`, the design
