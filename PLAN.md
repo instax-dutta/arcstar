@@ -1,571 +1,388 @@
-# Project Arcstar - Build Plan
+# Project Arcstar - Master Build Doctrine
 
 **One line:** Credibility scoring as infrastructure, dependency graph as the interface.
-**License:** AGPL-3.0 (matching the open-source-first goal).
-**Status:** Plan approved in principle. Nothing built yet. Empty repo.
+
+**License:** AGPL-3.0.
+
+**Status:** Phase 0 and Phase 1 complete. Phase 2 complete for blast radius. Phase 3 and
+Phase 4 have basic application shells. Phase 5, the benchmark that is the actual
+go/no-go gate, is not yet built. No service has been deployed for external users.
+
+This document is the governing contract for the project. Where code, README, and this
+document disagree, this document controls unless an amendment is recorded in the
+corrections section with evidence.
 
 ---
 
-## 0. The thesis, in one paragraph
+## 0. Thesis
 
 Every existing dashboard is a feed of events. None of them is a model of the world.
 Arcstar ingests claims from open sources, scores each claim's credibility using a
-transparent, auditable methodology, links claims to nodes in a dependency graph of
-countries, companies, chokepoints and commodities, and answers the question no
-existing tool answers well: **"if X happens, here is what breaks, ranked, and here is
-how confident we are in each link."**
+transparent and auditable methodology, links claims to nodes in a dependency graph of
+countries, companies, chokepoints, and commodities, and answers the question no
+existing tool answers well:
 
-The credibility methodology is the moat. It is public, versioned, and improves with use.
-The graph is the product surface. Both are free and open.
+> If X happens, here is what breaks, ranked, and here is how confident we are in each
+> link.
 
----
+The credibility methodology is the moat. It is public, versioned, and improves with
+use. The graph is the product surface. Both are free and open.
 
-## 1. Stack decisions and why
+Arcstar does not compete on breadth. Breadth is the wedge of systems such as
+World Monitor, which fuses live conflict, markets, shipping, aviation, and cyber
+signals onto one situational-awareness map. Arcstar's wedge is depth and trust:
+deterministic, reproducible credibility arithmetic; cascade-collapsed provenance; and
+relation-aware blast radius. A user should be able to ask why any number exists and
+receive a complete derivation.
 
-| Layer | Choice | Reasoning |
+## 1. Doctrine: what this system is
+
+1. **Credibility is infrastructure, not opinion.** No human editor scores a claim.
+2. **Deterministic arithmetic only.** Scores are functions of validated inputs.
+3. **The LLM never scores.** It extracts claims and links entities. Extraction
+   confidence is a gate, not a score.
+4. **Cascade collapse is the core innovation.** Twenty outlets citing one source count
+   as one source.
+5. **Multiplicative gates, never weighted averages.** A pile of weak corroboration
+   cannot rescue a garbage source.
+6. **Every score is explainable.** An unexplained score is not shipped.
+7. **Scores are descriptive, never predictive.** The UI must say this.
+8. **Errors are surfaced.** Overrides feed the benchmark.
+9. **Phase gates hold.** Logic before interface. Tests before commitment.
+10. **The benchmark decides.** AUC below 0.80 means the methodology is not shipped,
+    regardless of how clean the code is.
+
+## 2. Stack and deliberate exclusions
+
+| Layer | Choice | Rationale |
 |---|---|---|
-| Language | TypeScript 5.9.3 (strict) | End-to-end type sharing between engine, API, and UI. The credibility score type must be identical in all three. Non-negotiable for a system where a score is a public API contract. |
-| Monorepo | pnpm workspaces + Turborepo 2 | `packages/*` are pure libraries, `apps/*` are deployables. Turborepo gives per-package caching on test+build. |
-| Test runner | Vitest 5 | Native TS/ESM, fast, single tool for unit + integration. Pairs with `@fast-check/vitest@0.5.0` for property testing. |
-| Property testing | fast-check 4.x | Non-negotiable for the credibility engine. See §4.2. The scoring invariants are the product. |
-| Validation | Zod 4 | Schema-first contracts, inferred types. |
-| Lint | ESLint 10 flat config + typescript-eslint 8 | Shared config at the repo root. The purity check is a separate script, not an ESLint rule. |
-| DB | Postgres 17 | `claims`, `sources`, `scores`, `nodes`, `edges`. Use recursive CTEs for graph traversal. `ltree` for materialised paths. |
-| Queue | pg-boss | Job queue on the same Postgres. No Redis in Phase 1. Removes an infra dependency for zero throughput cost at our scale. |
-| API | Hono + Zod | Fast, Zod schemas double as OpenAPI source. Zod types are the wire contract. |
-| Graph render | Sigma.js v3 + graphology | WebGL, handles 10k+ nodes. graphology gives community detection and layout. MIT licensed. Chosen over D3 (cannot do 10k nodes) and Cytoscape (canvas, slower). |
-| LLM | Any OpenAI-compatible endpoint, Ollama default | Credibility is **deterministic arithmetic, not LLM output.** The LLM does extraction (claim parsing, entity linking) only. See §3.4. |
-| Runtime | Node 22+ (developed on 26) | LTS, best ecosystem fit. |
-| CI | GitHub Actions | Fast: unit+property on every push, integration on PR, full eval nightly. |
+| Language | TypeScript 5.9.3 (strict) | End-to-end type sharing. The score type is a public contract. |
+| Monorepo | pnpm workspaces + Turborepo 2 | Pure libraries in `packages/*`, deployables in `apps/*`. |
+| Tests | Vitest 5 + fast-check 4.x | Property testing is non-negotiable for invariants. |
+| Validation | Zod 4 | Schema-first contracts with inferred types. |
+| Lint | ESLint 10 flat config + typescript-eslint 8 | Shared config, no rule-level purity substitute. |
+| DB | Postgres 17 | Recursive CTE traversal. `ltree` for materialised paths. |
+| Queue | pg-boss | Same Postgres, no Redis in Phase 1. |
+| API | Hono + Zod | JSON boundary, typed validators. |
+| Graph render | Sigma.js v3 + graphology | WebGL at 10k+ nodes. |
+| LLM | OpenAI-compatible, Ollama default | Extraction only. |
+| Runtime | Node 22+, developed on 26 | LTS ecosystem fit. |
+| CI | GitHub Actions | Every push runs the purity gate, typecheck, lint, tests. |
 
-### Version pinning constraint
+Version pinning: TypeScript stays at 5.9.x until `typescript-eslint` supports 7.x.
 
-TypeScript is deliberately held at **5.9.x, not 7.x**. TypeScript 7 exists but
-`typescript-eslint@8` declares `typescript >=4.8.4 <6.1.0`, so the linter does not yet
-support it. Revisit when typescript-eslint widens its range; do not force TS 7 ahead of the
-linter.
+Deliberately excluded: Neo4j, Kafka, microservices, Next.js for the API, Kubernetes,
+D3 for large graphs. Postgres recursive CTEs and a single VPS/Docker Compose deploy
+are sufficient at the initial scale of roughly 5,000 nodes and 50,000 edges.
 
-### What we are deliberately NOT doing
-- No Neo4j. Recursive CTEs in Postgres handle our graph scale (est. 5k nodes, 50k edges initially) and cost zero extra infra. Revisit past ~500k edges.
-- No Kafka. pg-boss is sufficient for a daily-ingest workload.
-- No microservices. Two apps, three libraries, one deploy. Monolith until proven painful.
-- No Next.js for the API. The API is pure JSON, not SSR, so the framework buys nothing. The web app is Vite + React.
-- No Kubernetes. Single VPS, Docker Compose, nightly backups.
-
----
-
-## 2. Repository layout
+## 3. Repository contract
 
 ```
 arcstar/
+  AGENTS.md
+  PLAN.md
   packages/
-    credibility/      # PURE. The moat. Zero I/O, zero DB, deterministic.
-      src/
-        types.ts      # Claim, Source, Score, Evidence
-        normalize.ts  # source normalisation, dedup
-        tier.ts       # source tier classification
-        independence.ts# cascade detection (the hard part)
-        contradiction.ts
-        score.ts      # the composition
-        explain.ts    # human-readable derivation
-    graph/
-      src/
-        types.ts      # Node, Edge, RelationType
-        traverse.ts   # blast radius, min-cut, reachability
-        rank.ts       # severity ranking
-    contracts/        # Zod schemas shared by everything
+    contracts/       # Zod schemas, wire contract
+    credibility/     # pure scoring engine
+    graph/           # dependency graph and blast radius
   apps/
-    api/              # Hono server, ingest endpoints, cron
-    web/              # Vite + React + Sigma.js
-  evals/              # the falsifiable benchmark
+    api/             # Hono HTTP boundary
+    web/             # Vite + React + Sigma.js
+  evals/            # benchmark (not yet built)
+  scripts/          # check-purity.mjs
 ```
 
-**The critical boundary:** `packages/credibility` has no dependencies on anything
-except each other. It takes plain objects, returns plain objects. This is what makes
-it exhaustively testable, and it is the reason the moat is defensible - it is
-reproducible by anyone, forever, with `git clone && npm test`.
+The credibility engine has no dependencies except itself and `contracts`. It accepts
+plain objects and returns plain objects. It is reproducible by anyone with
+`git clone && pnpm test`.
 
----
+The DOX hierarchy is part of the product contract. Every durable boundary has an
+`AGENTS.md`; changes require a DOX pass.
 
-## 3. The credibility methodology (the moat)
+## 4. Credibility methodology
 
-### 3.1 Core types
+### 4.1 Core types
 
 ```ts
-type SourceTier = 1 | 2 | 3 | 4 | 5;  // 1 = primary/wire, 5 = anonymous social
-
+type SourceTier = 1 | 2 | 3 | 4 | 5;
 interface Source {
-  id: string;
-  publisher: string;
-  tier: SourceTier;
-  publishedAt: Date;
-  citesSourceIds: string[];   // provenance chain - drives cascade detection
-  primaryEvidence?: string;   // document, video, dataset, direct observation
+  id: string; publisher: string; tier: SourceTier; publishedAt: Date;
+  citesSourceIds: string[]; primaryEvidence?: string;
 }
-
 interface Claim {
-  id: string;
-  text: string;
-  subjectNodeId: string;      // graph node this claim is about
-  assertedAt: Date;
-  supportingSourceIds: string[];
-  contradictingSourceIds: string[];
-  extractionConfidence: number; // 0-1, how sure are we we parsed it right
+  id: string; text: string; subjectNodeId: string; assertedAt: Date;
+  supportingSourceIds: string[]; contradictingSourceIds: string[];
+  extractionConfidence: number; // 0..1
 }
 ```
 
-### 3.2 Score composition
+### 4.2 Score composition
 
-The score is **not** a weighted average. Weighted averages are what existing tools do
-and they have a fatal property: high corroboration can rescue a garbage source. We use
-**multiplicative gates, then a saturating boost.**
+Weighted averages are rejected because high corroboration can rescue a garbage source.
 
 ```
-base        = tierWeight(source.tier)                     // 0.40 .. 0.90
-independence = independentSourceCount(supporting)        // 0,1,2,... (cascade-collapsed)
+base        = tierWeight(source.tier)                 // 0.40 .. 0.90
+independence = independentSourceCount(supporting)     // cascade-collapsed
 evidence    = hasPrimaryEvidence ? 1.0 : 0.75
 extraction  = claim.extractionConfidence
 
-gate  = base * evidence * extraction                      // 0.0 .. 1.0
-boost = 1 - exp(-independence / 2)                       // saturates at 1
-score = gate * (1 + 0.35 * boost)                          // final 0.0 .. ~1.35
+gate  = base * evidence * extraction                  // 0.0 .. 1.0
+boost = 1 - exp(-independence / 2)                   // saturates at 1
+score = gate * (1 + 0.35 * boost)                    // 0.0 .. ~1.35
 ```
 
-`independence` is cascade-collapsed: 20 outlets all citing one anonymous Telegram post
-counts as **1**, not 20. This is the single most important technical decision in the
-system, and it is what nobody else does.
+`independence` collapses citations. Origins are sources in the transitive closure
+that cite nothing else inside that closure. Repetition of an origin by synthesis
+still counts as one unit per genuinely independent origin.
 
-### 3.3 Contradiction
+### 4.3 Contradiction
 
-Contradicting claims are supplied by the caller as pre-scored items, each with the
-proposition it disputes. Repetition of one counter-claim is collapsed to its strongest form.
-
-```
-groupMax    = max(score) over contradicting claims sharing the same reason
-penalty     = sum of groupMax across distinct reasons
-score'      = score * (1 - min(0.5, penalty))
-```
-
-Capped at 50% so a strong claim is never fully destroyed by weak contradicting noise.
-Distinct `reason` values are treated as genuinely separate objections and accumulate in full.
-
-**Correction to this plan.** The original formulation was
-`sum over groups of (groupTotal / (1 + ln(1 + n)))`, intended to damp repetition. That
-formula is provably non-monotonic: for a group of total `T` and size `n`, adding one item
-grows the denominator faster than the numerator, so the penalty can fall.
+Contradicting claims arrive pre-scored with a `reason`. Identical reasons collapse
+to the maximum score; distinct reasons accumulate.
 
 ```
-n=1, T=1.35    penalty = 1.3500 / 1.6931 = 0.7973
-n=2, T=1.3501  penalty = 1.3501 / 2.0986 = 0.6433   <-- penalty DROPPED
+penalty = sum over distinct reasons of max score per reason
+score'  = score * (1 - min(0.5, penalty))
 ```
 
-Adding contradiction evidence made the score *higher*, which means an attacker could raise
-a claim's credibility by repeating a refutation of it. Taking the max per group is monotonic
-by construction, is order invariant, and still collapses repetition: ten repeats of one
-counter-claim cost the same as one, while ten distinct objections accumulate in full.
+The 0.5 cap prevents coordinated opposition from destroying a strong claim.
 
-### 3.4 The LLM boundary (important)
+Correction recorded during implementation: the original `groupTotal / (1 + ln(1+n))`
+formula was non-monotonic and has been replaced.
 
-The LLM **does not** produce credibility scores. Ever. It performs only:
-- claim extraction from raw text (text -> `Claim` draft)
-- entity linking (text -> candidate `Node` ids)
-- source tier *suggestion* (always validated by deterministic rules)
+### 4.4 LLM boundary
 
-All scoring is arithmetic on validated inputs. This means:
-- scores are reproducible
-- scores are auditable (see §3.5)
-- the system works with no LLM at all, degraded
+The LLM performs extraction and entity linking only. It never produces a score,
+never bypasses gates, and never overrides the arithmetic. The system degrades
+gracefully with no LLM at all.
 
-### 3.5 Explainability as a hard requirement
+### 4.5 Explainability
 
-Every score ships with its full derivation. Not optional.
+Every non-zero score carries base, base reason, independent sources with their
+collapsed counts, collapsed-from count, contradiction entries, final score, and
+`methodVersion`. A score without an explanation is not shipped. Version is part of
+the value, so scores remain reproducible after method changes.
 
-```ts
-interface ScoreExplanation {
-  base: number; baseWhy: string;
-  independentSources: string[];   // the actual cascade-collapsed set
-  collapsedFrom: number;          // raw count before collapsing
-  contradiction: { sourceId: string; score: number; reason: string }[];
-  finalScore: number;
-  methodVersion: string;          // e.g. "credibility@1.2.0"
-}
-```
+## 5. Dependency graph
 
-`methodVersion` on every score means scores are reproducible forever and method changes
-are auditable. This is a research-grade requirement and a genuine differentiator.
+### 5.0 Relation direction
 
----
+An edge's meaning depends on its relation type. Traversal consults `PROPAGATION`.
 
-## 4. TDD strategy
-
-The credibility engine is the moat, so it gets the most rigorous testing. The UI gets
-the least. Test effort is allocated by risk, not uniformly.
-
-| Layer | Technique | Target | Why |
-|---|---|---|---|
-| `credibility` scoring | example-based unit | 100% branch | Spec compliance, gates |
-| `credibility` independence | **property-based** | invariants | See below |
-| `credibility` score | **property-based** + golden | invariants + regression | Monotonicity is the guarantee |
-| `graph` traverse | unit + property | 100% branch | Cycles, disconnected graphs |
-| `graph` rank | property | 100% branch | Ordering stability |
-| `contracts` | schema validation | 100% | Everything depends on these |
-| `api` | integration + MSW | 100% branch | Route behaviour |
-| ingest adapters | contract tests + **recorded fixtures** | 100% branch | Never hit live network in CI |
-| `web` | Vitest + Testing Library | critical paths | Spend effort on graph interactions, not snapshot everything |
-
-### 4.1 The test pyramid in numbers
-
-- ~1,200 example-based unit tests (credibility, graph, contracts)
-- ~40 property-based properties with 200+ runs each (the invariants)
-- ~60 integration tests against MSW-mocked sources
-- ~30 component tests on the web app
-- 1 nightly evaluation run against the labelled benchmark
-
-### 4.2 Property-based invariants (these ARE the product)
-
-These are the properties that must never break. If one of these fails, the credibility
-score is unsound and we ship nothing.
-
-1. **Tier monotonicity.** For any claim, `score(tier N) >= score(tier N+1)` when all else
-   is held constant. A better-sourced claim never scores worse.
-2. **Independence monotonicity.** Increasing the number of *independent* sources never
-   decreases the score. Adding a 5th genuinely independent wire never hurts.
-3. **Cascade collapse.** For any set of sources all citing a single root source,
-   `independentCount == 1`.
-4. **Order invariance.** `independentCount(S)` is identical for any permutation of S.
-   Source ingestion order must never affect the score.
-5. **Idempotence.** Scoring is a pure function. `score(score(x)) == score(x)`.
-6. **Determinism.** Same input, same output, always. No `Math.random()`, no
-   `Date.now()` in the scoring path - time is injected.
-7. **Score bounds.** `0 <= score <= 1.35` for all valid inputs.
-8. **Contradiction cap.** No amount of contradicting evidence drives score below
-   `0.5 * uncorrectedScore`.
-9. **Empty support.** A claim with zero supporting sources scores exactly 0.
-10. **Explainability completeness.** Every non-zero score has a non-empty explanation
-    with at least one reason string per gate.
-
-Properties 4 and 6 will find real bugs. Property 6 in particular - the accidental
-`Date.now()` in a scoring path - is the single most common way credibility systems
-become unreproducible, and it is invisible without property testing.
-
-### 4.3 Golden tests
-
-Hand-written JSON fixtures in `packages/credibility/__fixtures__/golden/`, deliberately not
-Vitest snapshots: `vitest -u` would let a score change be accepted by re-running a command
-with nobody recording why the methodology moved.
-
-Every case carries a `rationale` and a unique name, both asserted by test, and every fixture
-is parsed through the real Zod schemas so a malformed fixture cannot pass by producing an
-error score. Expected values are computed by hand from the documented formula and *then*
-confirmed against the implementation, because capturing output from a run only freezes
-whatever the code currently does, bugs included. Ten cases exist, covering single-source
-scores with and without primary evidence, the cascade case, honest corroboration, zero
-support, contradiction, the contradiction cap, repetition collapse, and linear extraction.
-
-Changing an expected value means editing the fixture with a written justification. The file
-name carries the method version (`scores.v1.json`) so a methodology change is visible in
-the tree.
-
-### 4.4 Recorded fixtures for ingest
-
-Every external adapter has a `__fixtures__/*.json` capturing real (redacted) API
-responses. Tests replay fixtures, never the network. When an upstream API changes, the
-fixture test fails loudly rather than the pipeline silently rotting.
-
----
-
-## 5. Dependency graph model
-
-```ts
-type NodeType = 'country' | 'company' | 'chokepoint' | 'commodity' | 'infrastructure' | 'org';
-
-type RelationType =
-  | 'depends_on' | 'supplies' | 'transits_through'
-  | 'sanctions' | 'owns' | 'located_in' | 'produces' | 'consumes';
-
-interface Node { id: string; type: NodeType; label: string; props: Record<string, unknown>; }
-interface Edge { from: string; to: string; relation: RelationType; weight: number; asOf: Date; }
-```
-
-Edges are **as-of dated**. This matters: the Russia-Ukraine gas relationship has a
-start and an end. Blast radius is computed on the graph as it stood at a given date, so
-we can ask "what depended on this in March 2022" and "what depends on it now."
-
-### 5.0 Relation direction (not specified in the original plan)
-
-An edge `A depends_on B` means A breaks when B breaks, so impact travels B -> A. An edge
-`A produces B` means B breaks when A breaks, so impact travels A -> B. The same stored
-edge direction means opposite things for different relations, and a traversal that
-ignores this produces confident nonsense: it would report that shutting the oil market
-endangered the producer rather than its consumers.
-
-The table lives in `packages/graph/src/blast.ts` as `PROPAGATION` and is pinned by tests
-in both directions wherever direction is meaningful.
-
-| Relation | Direction | Reasoning |
+| Relation | Propagation | Reasoning |
 |---|---|---|
 | `depends_on` | reverse | A breaks when B breaks |
 | `transits_through` | reverse | Closing B stops A |
 | `consumes` | reverse | Losing B hurts A |
 | `located_in` | reverse | Disruption in B reaches A |
-| `supplies` | forward | B depends on A, so A breaking hurts B |
+| `supplies` | forward | A breaking hurts B |
 | `produces` | forward | A breaking stops B |
 | `owns` | forward | A breaking endangers B |
-| `sanctions` | none | A tightening and a relaxation push opposite ways; guessing would manufacture a blast radius nobody can defend |
+| `sanctions` | none | Direction is genuinely ambiguous |
 
-### 5.1 Blast radius - IMPLEMENTED
-
-The core product query: **"if node X is disrupted, what breaks?"**
+### 5.1 Blast radius - implemented
 
 ```
-blastRadius(graph, disruptedNode, { maxHops: 3, decay: 0.6, ceiling: 1 })
-  -> [{ node, hops, impactScore, path: NodeId[] }]  // sorted desc by impactScore
+blastRadius(graph, disruptedNode, { maxHops, decay, ceiling }) ->
+  [{ node, hops, impactScore, path }]
 ```
 
-- Impact travels along the direction `PROPAGATION` specifies, not uniformly along stored
-  edges.
-- `impactScore = sum over paths of (weight * decay^hops)`, so a node reachable several ways
-  scores higher, and decay applies from the first hop onward.
-- `maxHops` bounds the path count. This is what makes a cyclic graph tractable: finitely
-  many hops means finitely many paths.
-- Cycle-safe: a path may not revisit a node in its own chain.
-- The disrupted node is excluded from its own results.
-- Ordered by descending impact, then ascending node id as a stable tiebreak.
+Impact is the sum over paths of `weight * decay^hops`, evaluated only along the
+propagation direction. `maxHops` bounds paths, making cyclic graphs tractable.
+Cycle-safe: a path may not revisit a node. The disrupted node is excluded.
+Results order by descending impact, then ascending id.
 
-### 5.2 Min-cut - NOT YET IMPLEMENTED
+### 5.2 Min-cut - not implemented
 
-Single points of failure are the most valuable insight a graph can give.
-`criticalChokepoints(graph)` finds edges whose removal most increases partition count.
-Exponentially hard in general - we run bounded k (k <= 3) with a hard time budget, and
-**the time budget is part of the contract**, tested by a property that asserts it returns
-within budget on pathological input. Returns partial results with a `complete: false` flag
-rather than hanging.
+Single points of failure. Bounded `k <= 3` with a hard time budget. Returns
+partial results with `complete: false` rather than hanging.
 
-### 5.3 Ranking - DEFERRED, blast radius scores rank directly
+### 5.3 Ranking - deferred
 
-Severity ranking uses the blast radius `impactScore` directly for v1 rather than
-PageRank. A separate PageRank pass is deferred: on a curated node set of a few hundred
-entities the direct multi-path impact score is more explainable to a user, and
-explainability is a harder requirement here than a marginally better ranking. If
-benchmark data later shows the direct score ranks poorly, revisit.
+Direct multi-path `impactScore` ranks in v1. PageRank is deferred because the
+direct score is more explainable; revisit if benchmark ranking data supports it.
 
-## 6. Falsifiable acceptance criteria
+### 5.4 As-of dating - implemented
 
-**These decide whether the project works. If we cannot hit them, we do not ship.**
+`resolveEdgesAsOf` selects the most recent edge at or before the query date for
+each `(from, to, relation)` triple. A zero-weight edge is an end marker. Exact
+collisions resolve to maximum weight, so output is order-independent.
 
-### 6.1 The benchmark (build this in Phase 5, not later)
+## 6. Invariants (the product)
 
-A labelled set of **300 real-world geopolitical claims** (100 confirmed-true,
-100 confirmed-false, 100 ambiguous/unresolved), hand-labelled with citations. Sourced
-from public fact-check networks (PolitiFact, Full Fact, AFP Fact Check) plus
-deliberate cascade cases.
+1. Tier monotonicity.
+2. Independence monotonicity.
+3. Cascade collapse.
+4. Order invariance.
+5. Idempotence.
+6. Determinism.
+7. Score bounds.
+8. Contradiction cap.
+9. Empty support.
+10. Explainability completeness.
 
-**Success criteria:**
-- **Separation:** mean score(confirmed-true) - mean score(confirmed-false) >= 0.25
-- **Ranking:** AUC >= 0.80
-- **Cascade detection:** >= 90% of deliberately-cascaded false claims collapse to
-  `independence == 1`
-- **Calibration:** claims scoring > 0.7 are true at >= 70% (precision, not just AUC)
+If any fails, the score is unsound and nothing ships.
 
-This benchmark is public and the scores are reproducible. **It is the credibility
-argument and it is the thing that makes journalists take us seriously.**
+## 7. Verification gates
 
-### 6.2 Graph criteria
-- Hormuz closure blast radius: top-10 ranked entities match an expert human ordering
-  on >= 8 of 10.
-- Any single chokepoint identified as critical is genuinely on >= 3 known major
-  trade routes.
+Automated evidence counts. Manual attestations only when necessary and proportional
+to risk. Abandonment is terminal and must be surfaced.
 
-### 6.3 Engineering criteria
-- `packages/credibility` has zero I/O dependencies (enforced in CI by a lint rule).
-- All 10 credibility properties hold for 1,000 runs each.
-- Full suite runs in < 60s locally. If it does not, it is not being run, and it will rot.
+- Purity gate: `packages/credibility` has zero I/O.
+- All invariants run 1,000 fast-check cases.
+- Coverage is 100% on statements, branches, functions, and lines for the pure
+  packages.
+- Typecheck, lint, and tests pass in CI.
+- Full suite runs in under 60 seconds locally.
+- The benchmark's acceptance numbers are mandatory, not aspirational.
 
-### 6.4 The honest failure case
-Predictive/scoring systems are wrong constantly. The design response:
-- scores are **descriptive, never predictive**, and the UI must say so
-- **every score is explainable** - a user can always ask "why" and get an answer
-- users can **override** any score, and overrides feed the benchmark
+## 8. Falsifiable acceptance criteria
 
-If we cannot be honest about error, we do not get to build this.
+### 8.1 Benchmark
 
----
+300 real-world geopolitical claims: 100 confirmed true, 100 confirmed false, 100
+ambiguous. Sourced from public fact-check networks plus deliberate cascade cases.
 
-## 7. Phased delivery
+- Separation: mean(true) - mean(false) >= 0.25.
+- Ranking: AUC >= 0.80.
+- Cascade detection: at least 90% of deliberately cascaded false claims collapse to
+  `independence == 1`.
+- Calibration: claims scoring above 0.7 are true at least 70% of the time.
 
-Each phase ends green or does not merge. No phase includes UI work unless the phase's
-logic is proven by tests first.
+### 8.2 Graph
 
-### Phase 0 - Foundations (2-3 days)
-- pnpm + Turborepo + Vitest + fast-check scaffold
-- `@arcstar/contracts` with all Zod schemas
-- CI pipeline, coverage gates, the no-I/O-in-credibility lint rule
-- First failing test, then first passing test. Prove the loop works.
-- **Exit:** `pnpm test` green, CI running, lint rule enforced.
+- Hormuz closure: top 10 match an expert human ordering on at least 8 of 10.
+- Any critical chokepoint is genuinely on at least 3 known major trade routes.
 
-### Phase 1 - Credibility core (1-2 weeks)
-- `tier.ts` source classification
-- `independence.ts` cascade detection **with all its property tests** - this is the
-  single highest-risk component, build it first and hardest
-- `score.ts` composition + the 10 invariants
-- `explain.ts`
-- Golden fixtures for ~50 hand-worked cases
-- **Exit:** all properties hold at 1,000 runs. No integration yet. Pure library,
-  fully tested.
+### 8.3 Engineering
 
-### Phase 2 - Graph core (1 week)
-- Types, traversal, blast radius, cycle safety
-- Min-cut with time budget
-- Ranking with stable ordering
-- **Exit:** property tests green, incl. pathological-graph timing test.
+- Zero I/O in credibility, enforced in CI.
+- All invariants at 1,000 runs.
+- Suite under 60 seconds.
+- Reproducible by cloning and running `pnpm test`.
 
-### Phase 3 - Ingest + API (1-2 weeks)
-- GDELT adapter (free, no key, documented 15-min update cadence)
-- ACLED adapter (free non-commercial, registration required - **build this first
-  because it forces the registration flow to be correct from day one**)
-- RSS adapter for a hand-curated publisher list
-- Recorded fixtures for all three
-- Hono API exposing `/claims`, `/score`, `/blast-radius`, `/graph`
-- **Exit:** integration tests green, real data flowing, no network in CI.
+## 9. Phased delivery
 
-### Phase 4 - The web app (1-2 weeks)
-- Sigma.js graph view, node/edge interaction
-- Claim panel showing score + **full explanation, always visible**
-- Blast radius query UI
-- **Exit:** a user can pick a chokepoint, see what breaks, and see why we believe
-  each link. This is the product moment.
+### Phase 0 - Foundations: complete
 
-### Phase 5 - The benchmark (1-2 weeks, runs parallel with Phase 4)
-- Build the 300-claim labelled set
-- Run evaluation, measure against §6.1
-- Iterate the methodology **against the benchmark, not against vibes**
-- **Exit:** AUC >= 0.80 or a written decision to iterate further. This is the
-  go/no-go gate for the whole project.
+Scaffold, contracts, CI, purity gate.
 
-### Phase 6 - Hardening + open launch
-- Performance, caching, incremental scoring
-- Method versioning + public changelog
-- Docs, `SELF_HOSTING.md`, Docker Compose
-- **Exit:** someone else can clone, run, and reproduce our scores.
+### Phase 1 - Credibility core: complete
 
----
+Cascade detection, score composition, contradiction, explainability, 86 tests and
+golden snapshots.
 
-## 8. Risks
+### Phase 2 - Graph core: complete for blast radius
 
-| Risk | Likelihood | Mitigation |
-|---|---|---|
-| Credibility engine is wrong often enough to be useless | Medium | Benchmark first-class, gate at AUC 0.80, honest about error |
-| Cannot beat World Monitor on breadth | High | Do not try. Breadth is not the wedge. Depth and trust are. |
-| Entity resolution is a swamp | High | Constrain to a curated node set first. Do not attempt open extraction in v1. |
-| Nobody cares without a UI | Medium | Graph UI is Phase 4, before launch. The score is invisible without it. |
-| Data sources rate-limit or vanish | Medium | Multiple adapters per signal type, recorded fixtures, graceful degradation |
-| Scope creep into "just another map" | Medium | Phase gates. No map until the graph and the scoring are proven. |
-| LLM extraction drifts and scores silently degrade | Medium | Golden tests + nightly eval in CI, extraction confidence is a scored gate |
+Blast radius, propagation, cycle safety, as-of dating. Min-cut and golden fixtures
+remain.
 
----
+### Phase 3 - Ingest and API: partial
 
-## 9. Decisions already made (no revisiting without new evidence)
+Basic Hono API implemented. Ingest adapters and persistent data remain:
+- ACLED adapter; registration flow and non-commercial terms.
+- GDELT Cloud adapter; event families, confidence, and pagination constraints.
+- RSS adapter for a hand-curated publisher list.
+- Recorded fixtures for every adapter.
+- Postgres persistence, pg-boss queue, recursive CTE graph queries.
 
-- TypeScript end-to-end. Zod for contracts.
-- Credibility = deterministic arithmetic. LLM only extracts. Non-negotiable.
-- Inductive, saturating boost over weighted average.
-- Cascade collapse is the core innovation.
-- Postgres, not Neo4j. pg-boss, not Kafka.
-- Sigma.js for the graph.
-- AGPL-3.0, free and open, no accounts, no paywall.
-- Properties 1-10 are the product. If they break, we do not ship.
-- Benchmark before launch, not after.
+Notes from source research: ACLED returns a maximum of 5,000 rows by default and
+requires pagination for larger result sets; GDELT Cloud event endpoints use
+30-day windows and page limits; neither service may be called from tests.
 
----
+### Phase 4 - Web application: partial
+
+Basic Vite + React + Sigma.js view with node click and blast-radius results.
+Required before completion:
+- Persistent panel showing score and full explanation.
+- Selected-node claim inspection.
+- Stable handling for graphs beyond the demo seed.
+- Component tests on graph interactions.
+
+### Phase 5 - Benchmark: not built
+
+This is the project's go/no-go gate.
+
+### Phase 6 - Hardening and launch
+
+Self-hosting docs, Docker Compose, method version changelog, exportable scores.
 
 ## 10. Immediate next actions
 
-1. Scaffold the monorepo, get `pnpm test` green on a trivial test.
-2. Write the first property test for `independence.ts` and watch it fail.
-3. Define `contracts` schemas. Everything else depends on these.
-4. Build the credibility core to green. No UI, no API, no ingest.
-5. Only then: Phase 3 onward.
+1. Build the benchmark harness and first 30-claim pilot set.
+2. Implement one ingest adapter with recorded fixtures, using ACLED first.
+3. Replace demo graph with a curated graph seed of at least 100 nodes and 1,000
+   edges, with provenance.
+4. Implement min-cut, or formally defer it with a revisit condition.
+5. Add graph golden fixtures.
+6. Add self-hosting documentation and Docker Compose.
 
----
+## 11. Data and source governance
 
-## 11. Build status
+- Every external source adapter must have a recorded fixture set and a contract test.
+- Live network access is prohibited in CI.
+- Adapters must degrade gracefully when sources rate-limit or change shape.
+- Source tier suggestions from any heuristic or LLM are validated deterministically.
+- Deletion of upstream sources is not collapsed silently: provenance gaps are
+  surfaced in explanations.
 
-### Phase 0 - Foundations: COMPLETE
-### Phase 1 - Credibility core: COMPLETE
-### Phase 2 - Graph core: PARTIAL (blast radius done, min-cut deferred)
+## 12. Security, privacy, and licensing
 
-Verified: 170 tests, 100% coverage on
-statements, branches, functions, and lines in all three packages, purity gate verified in
-both directions.
+- AGPL-3.0 applies to the whole project.
+- No accounts and no paywall for the core graph or credibility data.
+- API and web must not log or persist user queries without disclosure.
+- No secrets may be committed; configuration is environment-driven.
+- Security review is required before any public deployment.
 
-Delivered:
+## 13. Scalability and performance
 
-- Monorepo, turbo pipeline, shared lint config, CI with nightly benchmark hook.
-- `packages/contracts` - all Zod schemas and cross-field validation (18 tests).
-- `packages/credibility` - cascade detection, score composition, contradiction
-  (86 tests, 23 property invariants, 10 golden snapshots).
-- `packages/graph` - blast radius with relation-aware propagation and as-of dated edges
-  (66 tests, 12 property invariants).
-- `scripts/check-purity.mjs` - the purity gate.
+- Pure package tests must run in under 60 seconds locally.
+- Graph traversal must terminate on cycles and pathological inputs.
+- Blast radius uses bounded hops rather than recursion without bounds.
+- Min-cut runs under a hard time budget and returns partial results.
+- UI rendering must handle at least 10,000 nodes via WebGL.
 
-All ten invariants from §4.2 are enforced. Scores are final for methodology version
-`credibility@1.0.0`.
+## 14. Risks
 
-### Phase 2 - Graph core: as-of dating added
+| Risk | Likelihood | Mitigation |
+|---|---|---|
+| Methodology is fallible against real claims | Medium | Benchmark gate, explicit error reporting, user overrides |
+| Entity resolution overwhelms curated scope | High | Curated node set first; no open extraction in v1 |
+| Loss of breadth comparison to World Monitor | High | Do not chase breadth; compete on depth and trust |
+| Data source instability or terms changes | Medium | Multiple adapters, recorded fixtures, graceful degradation |
+| LLM extraction drift | Medium | Golden tests, extraction confidence gate, nightly eval |
+| Scope creep into map product | Medium | Phase gates and documented non-goals |
+| Reproducibility failure | Low | Purity gate, method version, property tests |
 
-`resolveEdgesAsOf` reduces an edge history to a single snapshot. An edge's `asOf` is the
-date from which the relationship holds, and each (from, to, relation) triple resolves to
-its most recent edge at or before the query date. Omitting `asOf` means "now".
+## 15. Decisions recorded (no reopening without evidence)
 
-A **weight-0 edge is an end marker**: the relationship still resolves at that date but
-contributes nothing, so a dependency can be recorded as lapsed. There is no `validUntil`
-field. Exact (triple, asOf) collisions are corrupt upstream data and resolve to the maximum
-weight, so the result never depends on array order.
+- TypeScript end-to-end, Zod contracts.
+- Deterministic arithmetic only; extraction is the LLM's only role.
+- Multiplicative gates with saturating boost, never weighted averages.
+- Cascade collapse is mandatory.
+- Postgres, pg-boss, no Neo4j, no Kafka.
+- Sigma.js for graph rendering.
+- AGPL-3.0, free and open.
+- Invariants are product-level constraints.
+- Benchmark precedes any claim of effectiveness.
+- As-of dating uses zero-weight end markers rather than `validUntil`.
 
-Not yet done:
+## 16. Corrections recorded
 
-- §5.2 min-cut (`criticalChokepoints`).
-- `__fixtures__/golden/` for the graph package.
+1. Invariant 3: `independentCount <= supportingCount` is false in general.
+2. `collapsedFrom` is a covering, not a partition.
+3. Contradiction formula replaced due to non-monotonicity.
+4. Blast radius required `PROPAGATION`; naive traversal was wrong.
+5. PageRank deferred in favour of direct impact score.
+6. Deleted-source provenance gaps are not silently collapsed.
+7. CI schedule and unimplemented benchmark job were disabled to prevent false
+   failure spam; re-enable with `pnpm run eval`.
+8. Claude co-author trailers were removed from commit history.
 
-### Corrections to this plan found during Phase 0-2
+## 17. Change control
 
-Recorded here because they change the specification, not just the implementation.
-
-1. **§4.2 invariant 3 correction.** `independentCount <= supportingCount` is false in
-   general. A synthesis that cites two independent origins contributes two independence
-   units. The real bound is the closure size.
-2. **`collapsedFrom` is a covering, not a partition.** A source drawing on two origins is
-   counted under both, so per-origin counts are correct while their sum exceeds the
-   supporting count. Both facts were found by property-based testing and are pinned in
-   regression tests.
-3. **§3.3 contradiction formula was non-monotonic.** `total / (1 + ln(1+n))` let appending
-   evidence *reduce* the penalty, so repeating a refutation raised a claim's score.
-   Replaced with max-per-distinct-reason, which is monotonic by construction. See §3.3.
-4. **§5.1 blast radius traversed edges uniformly, which is wrong.** Edge direction means
-   opposite things for different relations. Added §5.0 defining `PROPAGATION`.
-5. **§5.3 PageRank ranking is deferred.** The blast radius `impactScore` already ranks, and
-   is more explainable. Added a condition for revisiting.
-6. **Deleted-source limitation.** A source citing an unresolvable (deleted) source is
-   treated as an origin. We do not collapse on an unobservable shared root, because that
-   would fabricate evidence. This can overstate corroboration and is a known gap to close
-   by surfacing "provenance incomplete" in the explanation layer.
-
-### Next
-
-1. As-of-dated edge filtering, so the "what did this depend on, and when" question works.
-2. §5.2 min-cut, if the time-budget contract is worth the complexity at our graph size.
-3. Phase 3: ingest adapters and the API, both still untested against real data.
-
-### MVP implementation (added)
-
-Basic MVP is implemented in `apps/api` (Hono: `/health`, `/graph`, `/claim`, `/score`,
-`/blast-radius`) and `apps/web` (Vite + React + Sigma.js with click-to-blast-radius).
-
-Phase 3 ingest adapters and the Phase 5 benchmark remain unbuilt.
-### Local resource policy
-
-This machine is shared. `pnpm test` fans out across turbo and vitest workers and will
-saturate every core, so vitest is configured with `maxWorkers: 1` and `fileParallelism:
-false` in all three packages - the suites are small enough that wall-clock cost is
-negligible. `./scripts/gentle-test.sh [package]` runs them sequentially at `nice 19` with
-a 512MB heap cap. CI still runs at full parallelism.
+- `PLAN.md` is amended only with dated corrections and evidence.
+- `AGENTS.md` remains the operational DOX rail and reflects current structure.
+- Every phase merges only when its exit criteria are demonstrably met.
+- A planned boundary becomes a real DOX boundary when first committed.
+- No weakening of the credibility invariants is accepted.
