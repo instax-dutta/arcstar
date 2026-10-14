@@ -11,7 +11,9 @@ COPY apps/api ./apps/api
 
 RUN pnpm install --frozen-lockfile --filter @arcstar/api... --prod=false
 
+RUN pnpm --filter @arcstar/api... build
+
 ENV NODE_ENV=production
 EXPOSE 8787
 
-CMD ["pnpm", "--filter", "@arcstar/api", "start:tsx"]
+CMD ["node", "apps/api/dist/index.js"]

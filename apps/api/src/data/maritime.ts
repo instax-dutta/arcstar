@@ -43,12 +43,6 @@ export const maritimeEdges: readonly Edge[] = [
   edge("hormuz", "cape-route", "supplies", 0.3),
 ];
 
-export const maritimeClaim = {
-  id: "claim-maritime-hormuz-1",
-  text: "Transit through the Strait of Hormuz fell 40% during the emergency period.",
-  subjectNodeId: "hormuz",
-};
-
 export function maritimeGraph() {
   return { nodes: [...maritimeNodes], edges: [...maritimeEdges] };
 }

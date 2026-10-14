@@ -20,15 +20,15 @@ export function parseFeed(xml: string): ParsedFeed {
     channelTitle: tagContent(xml, "title"),
     items: items.map((item) => {
       const published = tagContent(item, "pubDate");
+      const publishedAt = new Date(published);
+      if (Number.isNaN(publishedAt.getTime())) {
+        throw new Error(`invalid pubDate "${published}"`);
+      }
       return {
         title: tagContent(item, "title"),
         link: tagContent(item, "link"),
-        publishedAt: new Date(published),
+        publishedAt,
       };
     }),
   };
-}
-
-export function parseRss(xml: string): FeedItem[] {
-  return parseFeed(xml).items;
 }
