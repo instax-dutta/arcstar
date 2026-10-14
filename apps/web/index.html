@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Arcstar</title>
+    <style>
+      html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+      #root { height: 100%; }
+      .layout { display: grid; grid-template-columns: 2fr 1fr; height: 100%; }
+      .panel { padding: 1rem; overflow: auto; border-left: 1px solid #ccc; }
+      #graph { width: 100%; height: 100%; }
+      .node-item { margin-bottom: 0.5rem; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

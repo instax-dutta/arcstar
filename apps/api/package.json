@@ -1,0 +1,27 @@
+{
+  "name": "@arcstar/api",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build",
+    "lint": "eslint src",
+    "test": "vitest run --coverage",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@arcstar/contracts": "workspace:*",
+    "@arcstar/credibility": "workspace:*",
+    "@arcstar/graph": "workspace:*",
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.6.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@hono/zod-validator": "^0.4.0",
+    "@vitest/coverage-v8": "^5.0.2",
+    "tsx": "^4.0.0"
+  }
+}

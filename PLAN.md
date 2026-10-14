@@ -556,6 +556,12 @@ Recorded here because they change the specification, not just the implementation
 2. §5.2 min-cut, if the time-budget contract is worth the complexity at our graph size.
 3. Phase 3: ingest adapters and the API, both still untested against real data.
 
+### MVP implementation (added)
+
+Basic MVP is implemented in `apps/api` (Hono: `/health`, `/graph`, `/claim`, `/score`,
+`/blast-radius`) and `apps/web` (Vite + React + Sigma.js with click-to-blast-radius).
+
+Phase 3 ingest adapters and the Phase 5 benchmark remain unbuilt.
 ### Local resource policy
 
 This machine is shared. `pnpm test` fans out across turbo and vitest workers and will

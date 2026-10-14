@@ -1,0 +1,26 @@
+{
+  "name": "@arcstar/web",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --build && vite build",
+    "typecheck": "tsc --build",
+    "lint": "eslint src",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "graphology": "^0.26.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sigma": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^6.0.0"
+  }
+}

@@ -116,6 +116,9 @@ Three child DOX files exist. All are leaf packages under `packages/`.
 - `packages/graph/AGENTS.md` - dependency graph, blast radius, impact propagation.
   Owns `PROPAGATION`, the table that fixes which way impact travels per relation.
 
+- `apps/api/AGENTS.md` - Hono HTTP boundary, endpoints, demo data, date coercion.
+- `apps/web/AGENTS.md` - Vite + React + Sigma.js product surface.
+
 Supporting layout that is NOT a DOX boundary:
 
 - `scripts/check-purity.mjs` - the purity gate. Owned by the root rail, not a child DOX.
@@ -127,8 +130,6 @@ child `AGENTS.md` with the standard section order and add it to this index.
 
 | Planned path | Scope it will own |
 |---|---|
-| `apps/api/` | Hono server, ingest endpoints, cron. Adapters use recorded fixtures, never live network in CI. |
-| `apps/web/` | Vite + React + Sigma.js. Product surface only, no scoring logic may live here. |
 | `evals/` | The 300-claim labelled benchmark. AUC >= 0.80 is the project go/no-go gate. |
 
 ### Intentionally skipped
