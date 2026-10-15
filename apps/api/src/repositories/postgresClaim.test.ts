@@ -23,17 +23,18 @@ const claim = ClaimSchema.parse({
 });
 
 describe("PostgresClaimRepository", () => {
-  it("upserts claim evidence rows idempotently", async () => {
+  it("upserts claim source links without deleting evidence", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql({ rows: [] }, calls);
     await new PostgresClaimRepository(sql).upsert(claim);
     expect(calls[0]?.sql).toContain("INSERT INTO claim");
-    expect(calls[1]?.sql).toContain("DELETE FROM claim_evidence");
-    expect(calls[2]?.params).toEqual(["c1:s2:supports", "c1", "s2", "supports"]);
-    expect(calls[3]?.params).toEqual(["c1:s3:contradicts", "c1", "s3", "contradicts"]);
+    expect(calls[1]?.sql).toContain("DELETE FROM claim_source_link");
+    expect(calls.some((call) => call.sql.includes("DELETE FROM claim_evidence"))).toBe(false);
+    expect(calls[2]?.params).toEqual(["c1", "s2", "supports"]);
+    expect(calls[3]?.params).toEqual(["c1", "s3", "contradicts"]);
   });
 
-  it("reads support and contradiction evidence for a subject", async () => {
+  it("reads support and contradiction links for a subject", async () => {
     const sql = fakeSql(
       {
         rows: [

@@ -2,7 +2,7 @@ import { ClaimSchema, type Claim } from "@arcstar/contracts";
 import type { ClaimRepository } from "./types.js";
 import { readStoredDate, type SqlClient } from "./postgres.js";
 
-interface ClaimRow {
+interface ClaimLinkRow {
   id: string;
   subject_entity_id: string;
   text: string;
@@ -12,6 +12,10 @@ interface ClaimRow {
   stance: string | null;
 }
 
+/**
+ * Claim source links are claim membership facts and may be replaced by an upsert.
+ * Evidence rows are separate review records and must never be deleted here.
+ */
 export class PostgresClaimRepository implements ClaimRepository {
   constructor(private readonly sql: SqlClient) {}
 
@@ -39,7 +43,7 @@ export class PostgresClaimRepository implements ClaimRepository {
       ],
     );
 
-    await this.sql.query(`DELETE FROM claim_evidence WHERE claim_id = $1`, [claim.id]);
+    await this.sql.query(`DELETE FROM claim_source_link WHERE claim_id = $1`, [claim.id]);
 
     for (const [stance, sourceIds] of [
       ["supports", claim.supportingSourceIds],
@@ -47,45 +51,29 @@ export class PostgresClaimRepository implements ClaimRepository {
     ] as const) {
       for (const sourceId of sourceIds) {
         await this.sql.query(
-          `INSERT INTO claim_evidence (id, claim_id, source_id, stance, status)
-           VALUES ($1, $2, $3, $4, 'resolved')
-           ON CONFLICT (id) DO NOTHING`,
-          [`${claim.id}:${sourceId}:${stance}`, claim.id, sourceId, stance],
+          `INSERT INTO claim_source_link (claim_id, source_id, stance, created_at, updated_at)
+           VALUES ($1, $2, $3, now(), now())
+           ON CONFLICT (claim_id, source_id, stance) DO UPDATE SET
+             updated_at = now()`,
+          [claim.id, sourceId, stance],
         );
       }
     }
   }
 
-  async get(id: string): Promise<Claim | undefined> {
-    const result = await this.sql.query<ClaimRow>(
+  private async fetchClaims(whereSql: string, params: unknown[]): Promise<Claim[]> {
+    const result = await this.sql.query<ClaimLinkRow>(
       `SELECT c.id, c.subject_entity_id, c.text, c.asserted_at, c.extraction_confidence,
-              ce.source_id, ce.stance
+              l.source_id, l.stance
        FROM claim c
-       LEFT JOIN claim_evidence ce ON ce.claim_id = c.id
-       WHERE c.id = $1`,
-      [id],
+       LEFT JOIN claim_source_link l ON l.claim_id = c.id
+       WHERE ${whereSql}
+       ORDER BY c.id, l.source_id, l.stance`,
+      params,
     );
-    const rows = result.rows;
-    if (rows.length === 0) return undefined;
-    return this.toClaim(rows);
-  }
 
-  async listBySubject(entityId: string): Promise<Claim[]> {
-    const result = await this.sql.query<ClaimRow>(
-      `SELECT c.id, c.subject_entity_id, c.text, c.asserted_at, c.extraction_confidence,
-              ce.source_id, ce.stance
-       FROM claim c
-       LEFT JOIN claim_evidence ce ON ce.claim_id = c.id
-       WHERE c.subject_entity_id = $1
-       ORDER BY c.id, ce.source_id`,
-      [entityId],
-    );
-    return this.groupClaims(result.rows);
-  }
-
-  private groupClaims(rows: ClaimRow[]): Claim[] {
-    const grouped = new Map<string, ClaimRow[]>();
-    for (const row of rows) {
+    const grouped = new Map<string, ClaimLinkRow[]>();
+    for (const row of result.rows) {
       const list = grouped.get(row.id) ?? [];
       list.push(row);
       grouped.set(row.id, list);
@@ -93,16 +81,28 @@ export class PostgresClaimRepository implements ClaimRepository {
     return [...grouped.values()].map((rowGroup) => this.toClaim(rowGroup));
   }
 
-  private toClaim(rows: ClaimRow[]): Claim {
+  async get(id: string): Promise<Claim | undefined> {
+    const claims = await this.fetchClaims("c.id = $1", [id]);
+    return claims[0];
+  }
+
+  async listBySubject(entityId: string): Promise<Claim[]> {
+    return this.fetchClaims("c.subject_entity_id = $1", [entityId]);
+  }
+
+  private toClaim(rows: ClaimLinkRow[]): Claim {
     const first = rows[0];
     if (!first) throw new Error("cannot map an empty claim row group");
+    const unique = (stance: string): string[] =>
+      [...new Set(rows.filter((row) => row.stance === stance).map((row) => row.source_id).filter((id): id is string => Boolean(id)))];
+
     return ClaimSchema.parse({
       id: first.id,
       text: first.text,
       subjectNodeId: first.subject_entity_id,
       assertedAt: readStoredDate(first.asserted_at, "asserted_at"),
-      supportingSourceIds: rows.filter((row) => row.stance === "supports").map((row) => row.source_id).filter((id): id is string => Boolean(id)),
-      contradictingSourceIds: rows.filter((row) => row.stance === "contradicts").map((row) => row.source_id).filter((id): id is string => Boolean(id)),
+      supportingSourceIds: unique("supports"),
+      contradictingSourceIds: unique("contradicts"),
       extractionConfidence: first.extraction_confidence,
     });
   }
