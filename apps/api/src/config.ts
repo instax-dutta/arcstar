@@ -3,6 +3,23 @@ export interface AppConfig {
   port: number;
   databaseUrl?: string;
   corsOrigins: string[];
+  rateLimitMax: number;
+  rateLimitWindowMs: number;
+}
+
+function parsePositiveInteger(
+  rawValue: string | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+  name: string,
+): number {
+  if (rawValue === undefined || rawValue.length === 0) return fallback;
+  const value = Number(rawValue);
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw new Error(`${name} must be an integer from ${min} to ${max}, received "${rawValue}"`);
+  }
+  return value;
 }
 
 function parseOrigins(env: Record<string, string | undefined>, nodeEnv: AppConfig["nodeEnv"]): string[] {
@@ -34,5 +51,12 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     throw new Error("DATABASE_URL must be a postgres:// or postgresql:// connection string");
   }
 
-  return { nodeEnv: rawEnv, port, databaseUrl, corsOrigins: parseOrigins(env, rawEnv) };
+  return {
+    nodeEnv: rawEnv,
+    port,
+    databaseUrl,
+    corsOrigins: parseOrigins(env, rawEnv),
+    rateLimitMax: parsePositiveInteger(env.RATE_LIMIT_MAX, 60, 1, 1_000_000, "RATE_LIMIT_MAX"),
+    rateLimitWindowMs: parsePositiveInteger(env.RATE_LIMIT_WINDOW_MS, 60_000, 1, 3_600_000, "RATE_LIMIT_WINDOW_MS"),
+  };
 }

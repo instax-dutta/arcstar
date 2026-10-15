@@ -56,20 +56,28 @@ describe("PostgresSourceRepository", () => {
     expect(sources[0]?.citesSourceIds).toEqual(["s2", "s3"]);
   });
 
-  it("writes the source pool and lineage rows", async () => {
+  it("writes known lineage and unresolved lineage gaps separately", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
-    const sql = fakeSql([], calls);
+    const sql = fakeSql([{ rows: [{ id: "known" }] }], calls);
     const source = SourceSchema.parse({
       id: "s1",
       publisher: "A",
       tier: 2,
       publishedAt: new Date(0),
-      citesSourceIds: ["s2", "s3"],
+      citesSourceIds: ["known", "missing"],
     });
     await new PostgresSourceRepository(sql).upsert(source);
-    expect(calls[0]?.sql).toContain("INSERT INTO source_pool");
-    expect(calls[0]?.params?.[3]).toBe(source.publishedAt);
-    expect(calls[1]?.sql).toContain("DELETE FROM source_lineage");
-    expect(calls).toHaveLength(4);
+    expect(calls[0]?.sql).toContain("SELECT id FROM source_pool WHERE id = ANY");
+    expect(calls[1]?.sql).toContain("INSERT INTO source_pool");
+    expect(calls[2]?.sql).toContain("DELETE FROM source_lineage_gap WHERE unresolved_source_ref");
+    expect(calls[4]?.sql).toContain("INSERT INTO source_lineage");
+    expect(calls[5]?.sql).toContain("DELETE FROM source_lineage_gap WHERE from_source_id");
+    expect(calls[6]?.sql).toContain("INSERT INTO source_lineage_gap");
+  });
+
+  it("reads lineage gaps", async () => {
+    const sql = fakeSql([{ rows: [{ unresolved_source_ref: "missing", status: "unknown", evidence: null }] }], []);
+    const gaps = await new PostgresSourceRepository(sql).listLineageGaps("s1");
+    expect(gaps).toEqual([{ fromSourceId: "s1", unresolvedSourceRef: "missing", status: "unknown" }]);
   });
 });

@@ -9,6 +9,8 @@ interface AssessmentRow {
   assessed_at: Date | string;
   score: number;
   explanation: unknown;
+  input_snapshot_ref: string;
+  input_snapshot: unknown;
 }
 
 export class PostgresAssessmentRepository implements AssessmentRepository {
@@ -16,30 +18,33 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
 
   async append(assessment: Assessment): Promise<void> {
     await this.sql.query(
-      `INSERT INTO assessment (id, claim_id, method_version, assessed_at, input_snapshot_ref, score, explanation, contradiction)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)
+      `INSERT INTO assessment (
+         id, claim_id, method_version, assessed_at,
+         input_snapshot_ref, score, explanation, contradiction, input_snapshot
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9::jsonb)
        ON CONFLICT (id) DO UPDATE SET
          score = EXCLUDED.score,
          explanation = EXCLUDED.explanation,
-         contradiction = EXCLUDED.contradiction`,
+         contradiction = EXCLUDED.contradiction,
+         input_snapshot = EXCLUDED.input_snapshot`,
       [
         randomUUID(),
         assessment.claimId,
         assessment.score.methodVersion,
         assessment.assessedAt,
-        // shortcut: the assessment row has no materialized input snapshot yet; the Assessment
-        // contract carries the claim id but not its source set. Upgrade when snapshots have ids.
-        assessment.claimId,
+        assessment.inputSnapshotRef,
         assessment.score.value,
         JSON.stringify(assessment.explanation),
         JSON.stringify(assessment.explanation.contradiction),
+        JSON.stringify(assessment.inputSnapshot),
       ],
     );
   }
 
   async getLatest(claimId: string): Promise<Assessment | undefined> {
     const result = await this.sql.query<AssessmentRow>(
-      `SELECT claim_id, method_version, assessed_at, score, explanation
+      `SELECT claim_id, method_version, assessed_at, score, explanation, input_snapshot_ref, input_snapshot
        FROM assessment
        WHERE claim_id = $1
        ORDER BY assessed_at DESC
@@ -53,7 +58,7 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
 
   async list(claimId: string): Promise<Assessment[]> {
     const result = await this.sql.query<AssessmentRow>(
-      `SELECT claim_id, method_version, assessed_at, score, explanation
+      `SELECT claim_id, method_version, assessed_at, score, explanation, input_snapshot_ref, input_snapshot
        FROM assessment
        WHERE claim_id = $1
        ORDER BY assessed_at ASC`,
@@ -68,6 +73,8 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
       score: { value: row.score, methodVersion: row.method_version },
       explanation: row.explanation,
       assessedAt: readStoredDate(row.assessed_at, "assessed_at"),
+      inputSnapshotRef: row.input_snapshot_ref,
+      inputSnapshot: row.input_snapshot,
     });
   }
 }

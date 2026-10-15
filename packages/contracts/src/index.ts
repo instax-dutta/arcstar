@@ -165,11 +165,25 @@ export const ScoreExplanationSchema = z.object({
  * A persisted assessment: the score for one claim plus the derivation that produced it.
  * Assessments are append-only in storage; this record is the unit that is written back.
  */
+export const AssessmentInputSnapshotSchema = z.object({
+  claim: ClaimSchema,
+  allSources: z.array(SourceSchema),
+  contradictingClaims: z.array(
+    z.object({
+      claimId: NonEmptyString,
+      score: z.number().min(0).max(MAX_SCORE),
+      reason: NonEmptyString,
+    }),
+  ),
+});
+
 export const AssessmentSchema = z.object({
   claimId: NonEmptyString,
   score: ScoreSchema,
   explanation: ScoreExplanationSchema,
   assessedAt: ValidDate,
+  inputSnapshotRef: NonEmptyString,
+  inputSnapshot: AssessmentInputSnapshotSchema,
 });
 
 export type SourceTier = z.infer<typeof SourceTierSchema>;
@@ -177,6 +191,7 @@ export type Source = z.infer<typeof SourceSchema>;
 export type Claim = z.infer<typeof ClaimSchema>;
 export type Score = z.infer<typeof ScoreSchema>;
 export type Assessment = z.infer<typeof AssessmentSchema>;
+export type AssessmentInputSnapshot = z.infer<typeof AssessmentInputSnapshotSchema>;
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 export type Node = z.infer<typeof NodeSchema>;
 export type RelationType = z.infer<typeof RelationTypeSchema>;
@@ -214,7 +229,20 @@ export const SourceLineageSchema = z.object({
   evidence: NonEmptyString.optional(),
 });
 
+/**
+ * A citation that cannot be resolved to a known source pool entry. The raw URL,
+ * provider id, or label is stored so the missing evidence is inspectable rather
+ * than silently treated as proof of independence.
+ */
+export const SourceLineageGapSchema = z.object({
+  fromSourceId: NonEmptyString,
+  unresolvedSourceRef: NonEmptyString,
+  status: z.enum(["unknown", "inferred"]),
+  evidence: NonEmptyString.optional(),
+});
+
 export type ClaimStance = z.infer<typeof ClaimStanceSchema>;
 export type ClaimEvidence = z.infer<typeof ClaimEvidenceSchema>;
 export type SourceLineageKind = z.infer<typeof SourceLineageKindSchema>;
 export type SourceLineage = z.infer<typeof SourceLineageSchema>;
+export type SourceLineageGap = z.infer<typeof SourceLineageGapSchema>;

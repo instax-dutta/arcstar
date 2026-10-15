@@ -11,7 +11,8 @@ const sql: SqlClient = {
 
 describe("repository factories", () => {
   it("creates both in-memory and postgres repository sets", () => {
-    expect(Object.keys(createInMemoryRepositories())).toEqual(["sources", "entities", "claims", "edges", "assessments"]);
-    expect(Object.keys(createPostgresRepositories(sql))).toEqual(["sources", "entities", "claims", "edges", "assessments"]);
+    const expectedKeys = ["sources", "entities", "claims", "claimEvidence", "edges", "assessments"];
+    expect(Object.keys(createInMemoryRepositories())).toEqual(expectedKeys);
+    expect(Object.keys(createPostgresRepositories(sql))).toEqual(expectedKeys);
   });
 });

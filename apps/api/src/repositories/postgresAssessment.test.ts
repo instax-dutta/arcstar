@@ -1,17 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { AssessmentSchema } from "@arcstar/contracts";
+import { ClaimSchema, SourceSchema } from "@arcstar/contracts";
 import type { QueryResult, SqlClient } from "./postgres.js";
 import { PostgresAssessmentRepository } from "./postgresAssessment.js";
+import { assessClaim } from "../assessment.js";
 
-const explanation = {
-  base: 0.5,
-  baseWhy: "wire",
-  independentSources: [],
-  collapsedFrom: 0,
-  contradiction: [],
-  finalScore: 0.5,
-  methodVersion: "1.0.0",
-};
+const source = SourceSchema.parse({
+  id: "s1",
+  publisher: "A",
+  tier: 1,
+  publishedAt: new Date(0),
+  citesSourceIds: [],
+});
+const claim = ClaimSchema.parse({
+  id: "c1",
+  text: "test",
+  subjectNodeId: "hormuz",
+  assertedAt: new Date(0),
+  supportingSourceIds: ["s1"],
+  contradictingSourceIds: [],
+  extractionConfidence: 0.9,
+});
 
 function fakeSql(response: QueryResult<unknown>, calls: Array<{ sql: string; params?: unknown[] }>): SqlClient {
   return {
@@ -23,40 +31,44 @@ function fakeSql(response: QueryResult<unknown>, calls: Array<{ sql: string; par
 }
 
 describe("PostgresAssessmentRepository", () => {
-  it("appends assessments with unique ids", async () => {
+  it("appends assessments with unique ids and stores the snapshot", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql({ rows: [] }, calls);
-    const assessment = AssessmentSchema.parse({
-      claimId: "c1",
-      score: { value: 0.7, methodVersion: "1.0.0" },
-      explanation,
-      assessedAt: new Date("2026-10-14T00:00:00Z"),
-    });
+    const assessment = assessClaim({ claim, allSources: [source], assessedAt: new Date(0) });
     await new PostgresAssessmentRepository(sql).append(assessment);
     await new PostgresAssessmentRepository(sql).append(assessment);
     expect(calls[0]?.params?.[0]).not.toBe(calls[1]?.params?.[0]);
     expect(calls[0]?.sql).toContain("INSERT INTO assessment");
+    const storedSnapshot = JSON.parse(String(calls[0]?.params?.[8])) as {
+      claim: { id: string };
+      allSources: Array<{ id: string }>;
+    };
+    expect(storedSnapshot.claim.id).toBe(claim.id);
+    expect(storedSnapshot.allSources.map((item) => item.id)).toEqual(["s1"]);
   });
 
-  it("reads the latest row", async () => {
+  it("reads the latest row and its input snapshot", async () => {
+    const assessment = assessClaim({ claim, allSources: [source], assessedAt: new Date(0) });
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql(
       {
         rows: [
           {
             claim_id: "c1",
-            method_version: "1.0.0",
-            assessed_at: "2026-10-14T00:00:00Z",
-            score: 0.8,
-            explanation,
+            method_version: assessment.score.methodVersion,
+            assessed_at: "2026-01-01T00:00:00Z",
+            score: assessment.score.value,
+            explanation: assessment.explanation,
+            input_snapshot_ref: assessment.inputSnapshotRef,
+            input_snapshot: assessment.inputSnapshot,
           },
         ],
       },
       calls,
     );
-    const repo = new PostgresAssessmentRepository(sql);
-    const latest = await repo.getLatest("c1");
-    expect(latest?.score.value).toBe(0.8);
-    expect(latest?.assessedAt.toISOString()).toBe("2026-10-14T00:00:00.000Z");
+    const latest = await new PostgresAssessmentRepository(sql).getLatest("c1");
+    expect(latest?.score.value).toBe(assessment.score.value);
+    expect(latest?.inputSnapshotRef).toBe(assessment.inputSnapshotRef);
+    expect(latest?.inputSnapshot).toEqual(assessment.inputSnapshot);
   });
 });

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  AssessmentSchema,
   ClaimSchema,
   EdgeSchema,
   NodeSchema,
   ScoreSchema,
+  SourceLineageGapSchema,
   SourceSchema,
   type Claim,
+
   type Source,
 } from "./index.js";
 
@@ -187,5 +190,43 @@ describe("EdgeSchema", () => {
     };
     expect(() => EdgeSchema.parse({ ...base, weight: 1.01 })).toThrow();
     expect(() => EdgeSchema.parse({ ...base, weight: -0.01 })).toThrow();
+  });
+});
+
+describe("AssessmentSchema", () => {
+  it("stores an exact input snapshot and snapshot reference", () => {
+    const snapshot = {
+      claim: VALID_CLAIM,
+      allSources: [VALID_SOURCE],
+      contradictingClaims: [],
+    };
+    const assessment = AssessmentSchema.parse({
+      claimId: VALID_CLAIM.id,
+      score: { value: 0.8, methodVersion: "credibility@1.0.0" },
+      explanation: {
+        base: 0.9,
+        baseWhy: "wire",
+        independentSources: [],
+        collapsedFrom: 1,
+        contradiction: [],
+        finalScore: 0.8,
+        methodVersion: "credibility@1.0.0",
+      },
+      assessedAt: new Date("2026-10-15T00:00:00Z"),
+      inputSnapshotRef: "snapshot-1",
+      inputSnapshot: snapshot,
+    });
+    expect(assessment.inputSnapshot).toEqual(snapshot);
+  });
+});
+
+describe("SourceLineageGapSchema", () => {
+  it("stores unresolved lineage as a first-class state", () => {
+    const gap = SourceLineageGapSchema.parse({
+      fromSourceId: "s1",
+      unresolvedSourceRef: "missing-anchor",
+      status: "unknown",
+    });
+    expect(gap.status).toBe("unknown");
   });
 });
