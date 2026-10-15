@@ -34,9 +34,21 @@ async function applyMigrations(sql: SqlClient): Promise<void> {
     .filter((name) => name.endsWith(".sql"))
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
+  await sql.query(`
+    CREATE TABLE IF NOT EXISTS schema_migration (
+      version TEXT PRIMARY KEY,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+
+  const appliedResult = await sql.query<{ version: string }>(`SELECT version FROM schema_migration`);
+  const applied = new Set(appliedResult.rows.map((row) => row.version));
+
   for (const file of files) {
+    if (applied.has(file)) continue;
     const migration = readFileSync(resolve(migrationsDir, file), "utf8");
     await sql.query(migration);
+    await sql.query(`INSERT INTO schema_migration (version) VALUES ($1)`, [file]);
   }
 }
 
