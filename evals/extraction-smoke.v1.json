@@ -1,0 +1,34 @@
+{
+  "version": "extraction-smoke.v1",
+  "description": "Hand-authored synthetic smoke labels. This is not a real extraction quality benchmark.",
+  "cases": [
+    {
+      "id": "candidate-suez",
+      "text": "Suez transit halts. The report confirms rerouting.",
+      "expectedCandidateSentences": ["Suez transit halts.", "The report confirms rerouting."],
+      "expectedEntitySpans": [
+        { "termId": "chokepoint/suez", "start": 0, "end": 4 }
+      ],
+      "terms": [
+        { "id": "chokepoint/suez", "label": "Suez" }
+      ],
+      "notes": "Two claim candidates and one exact entity span."
+    },
+    {
+      "id": "negation",
+      "text": "The ministry denied that transit halts.",
+      "expectedCandidateSentences": ["The ministry denied that transit halts."],
+      "expectedEntitySpans": [],
+      "terms": [],
+      "notes": "Negated triggers still create candidates; confidence means pre-review candidate status, not truth."
+    },
+    {
+      "id": "no-candidate",
+      "text": "This is an opinion about geopolitics.",
+      "expectedCandidateSentences": [],
+      "expectedEntitySpans": [],
+      "terms": [],
+      "notes": "No claim trigger means no candidate."
+    }
+  ]
+}

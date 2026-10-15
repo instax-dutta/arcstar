@@ -4,6 +4,8 @@ export {
   compareKeys,
   compareResolvedEdges,
   DEFAULT_BLAST_OPTIONS,
+  GraphBudgetError,
+  GRAPH_METHOD_VERSION,
   PROPAGATION,
   resolveEdgesAsOf,
 } from "./blast.js";

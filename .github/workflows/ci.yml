@@ -31,9 +31,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # The purity gate runs before tests on purpose. If someone reaches for
-      # Date.now() or fetch() inside the credibility engine, we want that to be
-      # the first failure, not something buried under a test run.
       - name: Purity gate (credibility engine must be I/O-free)
         run: node scripts/check-purity.mjs packages/credibility
 
@@ -46,25 +43,53 @@ jobs:
       - name: Test
         run: pnpm run test
 
-  benchmark:
-    name: Credibility benchmark (nightly, go/no-go gate)
+  smoke-benchmark:
+    name: Synthetic benchmark smoke (not the real benchmark)
     runs-on: ubuntu-latest
-    # PLAN.md section 6.1: AUC >= 0.80 is the project go/no-go gate. This runs
-    # nightly so a regression is visible long before anyone looks at a commit.
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 11.9.0
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
+      - name: Run synthetic smoke only
+        run: pnpm run eval:smoke
 
-      - name: Run evaluation
-        run: pnpm run eval
+  integration:
+    name: PostgreSQL integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: arcstar_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d arcstar_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/arcstar_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations
+        run: pnpm run migrate
+      - name: Integration tests
+        run: pnpm --filter @arcstar/api test:integration

@@ -230,3 +230,61 @@ describe("SourceLineageGapSchema", () => {
     expect(gap.status).toBe("unknown");
   });
 });
+
+describe("Source lineage contract", () => {
+  it("accepts full lineage records that match the citation list", () => {
+    const source = SourceSchema.parse({
+      ...VALID_SOURCE,
+      citesSourceIds: ["upstream"],
+      lineage: [
+        {
+          fromSourceId: VALID_SOURCE.id,
+          toSourceId: "upstream",
+          kind: "syndicates",
+          status: "verified",
+          evidence: "shared release",
+        },
+      ],
+    });
+    expect(source.lineage?.[0]?.kind).toBe("syndicates");
+  });
+
+  it("rejects lineage for a source that is not in citesSourceIds", () => {
+    expect(() =>
+      SourceSchema.parse({
+        ...VALID_SOURCE,
+        citesSourceIds: [],
+        lineage: [
+          { fromSourceId: VALID_SOURCE.id, toSourceId: "upstream", kind: "cites", status: "observed" },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("rejects lineage that claims to come from another source", () => {
+    expect(() =>
+      SourceSchema.parse({
+        ...VALID_SOURCE,
+        citesSourceIds: ["upstream"],
+        lineage: [
+          { fromSourceId: "someone-else", toSourceId: "upstream", kind: "cites", status: "observed" },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("stores valid and observed edge metadata", () => {
+    const edge = EdgeSchema.parse({
+      from: "a",
+      to: "b",
+      relation: "depends_on",
+      weight: 0.5,
+      asOf: new Date("2026-01-01T00:00:00Z"),
+      observedAt: new Date("2026-02-01T00:00:00Z"),
+      verificationState: "estimated",
+      evidenceRefs: ["doc-1"],
+    });
+    expect(edge.observedAt?.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+    expect(edge.verificationState).toBe("estimated");
+  });
+});

@@ -1,0 +1,13 @@
+{
+  "status": "not-yet-evaluable",
+  "reason": "adjudicated real benchmark dataset is absent; synthetic pilot cannot satisfy the real gate",
+  "datasetPath": "evals/real/benchmark.v1.json",
+  "criteria": {
+    "minBinaryRecords": 20,
+    "auc": 0.8,
+    "separation": 0.25,
+    "precisionAtThreshold": 0.7,
+    "threshold": 0.7,
+    "cascadeCollapse": 0.9
+  }
+}

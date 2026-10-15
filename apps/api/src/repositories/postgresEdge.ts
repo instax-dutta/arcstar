@@ -8,10 +8,22 @@ interface EdgeRow {
   relation_type: string;
   weight: number;
   valid_from: Date | string;
+  observed_at: Date | string;
+  evidence_refs: string[] | null;
+  verification_state: string | null;
 }
 
 function edgeId(edge: Edge): string {
   return `${edge.from}->${edge.to}:${edge.relation}:${edge.asOf.toISOString()}:${edge.weight}`;
+}
+
+function sortResolved(edges: Edge[]): Edge[] {
+  return edges.sort(
+    (a, b) =>
+      (a.from < b.from ? -1 : a.from > b.from ? 1 : 0) ||
+      (a.to < b.to ? -1 : a.to > b.to ? 1 : 0) ||
+      (a.relation < b.relation ? -1 : a.relation > b.relation ? 1 : 0),
+  );
 }
 
 export class PostgresEdgeRepository implements EdgeRepository {
@@ -23,41 +35,44 @@ export class PostgresEdgeRepository implements EdgeRepository {
          id, from_entity_id, to_entity_id, relation_type, weight,
          valid_from, observed_at, evidence_refs, verification_state
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $6, $7::text[], 'estimated')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9)
        ON CONFLICT (id) DO UPDATE SET
-         weight = EXCLUDED.weight,
          observed_at = EXCLUDED.observed_at,
-         evidence_refs = EXCLUDED.evidence_refs`,
-      [edgeId(edge), edge.from, edge.to, edge.relation, edge.weight, edge.asOf, []],
+         evidence_refs = EXCLUDED.evidence_refs,
+         verification_state = EXCLUDED.verification_state`,
+      [
+        edgeId(edge),
+        edge.from,
+        edge.to,
+        edge.relation,
+        edge.weight,
+        edge.asOf,
+        edge.observedAt ?? edge.asOf,
+        edge.evidenceRefs ?? [],
+        edge.verificationState ?? "unknown",
+      ],
     );
   }
 
   async list(): Promise<Edge[]> {
     const result = await this.sql.query<EdgeRow>(
-      `SELECT from_entity_id, to_entity_id, relation_type, weight, valid_from
+      `SELECT from_entity_id, to_entity_id, relation_type, weight, valid_from, observed_at, evidence_refs, verification_state
        FROM dependency_edge
        ORDER BY from_entity_id, to_entity_id, relation_type, valid_from DESC, weight DESC`,
     );
-    return result.rows.map((row) => this.toEdge(row));
+    return sortResolved(result.rows.map((row) => this.toEdge(row)));
   }
 
   async listAsOf(date: Date): Promise<Edge[]> {
     const result = await this.sql.query<EdgeRow>(
       `SELECT DISTINCT ON (from_entity_id, to_entity_id, relation_type)
-         from_entity_id, to_entity_id, relation_type, weight, valid_from
+         from_entity_id, to_entity_id, relation_type, weight, valid_from, observed_at, evidence_refs, verification_state
        FROM dependency_edge
        WHERE valid_from <= $1
        ORDER BY from_entity_id, to_entity_id, relation_type, valid_from DESC, weight DESC`,
       [date],
     );
-    return result.rows
-      .map((row) => this.toEdge(row))
-      .sort(
-        (a, b) =>
-          (a.from < b.from ? -1 : a.from > b.from ? 1 : 0) ||
-          (a.to < b.to ? -1 : a.to > b.to ? 1 : 0) ||
-          (a.relation < b.relation ? -1 : a.relation > b.relation ? 1 : 0),
-      );
+    return sortResolved(result.rows.map((row) => this.toEdge(row)));
   }
 
   private toEdge(row: EdgeRow): Edge {
@@ -67,6 +82,11 @@ export class PostgresEdgeRepository implements EdgeRepository {
       relation: row.relation_type,
       weight: row.weight,
       asOf: readStoredDate(row.valid_from, "valid_from"),
+      observedAt: readStoredDate(row.observed_at, "observed_at"),
+      evidenceRefs: row.evidence_refs ?? [],
+      verificationState: row.verification_state === "verified" || row.verification_state === "estimated" || row.verification_state === "disputed"
+        ? row.verification_state
+        : "unknown",
     });
   }
 }

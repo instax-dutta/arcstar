@@ -1,4 +1,4 @@
-import type { Assessment, Claim, ClaimEvidence, Edge, Node, Source, SourceLineageGap } from "@arcstar/contracts";
+import type { Assessment, Claim, ClaimEvidence, ClaimEvidenceReview, Edge, Node, Source, SourceLineage, SourceLineageGap } from "@arcstar/contracts";
 import { resolveEdgesAsOf } from "@arcstar/graph";
 import type {
   AssessmentRepository,
@@ -8,6 +8,7 @@ import type {
   EntityRepository,
   Repositories,
   SourceLineageGapRepository,
+  SourceLineageRepository,
   SourceRepository,
 } from "./types.js";
 
@@ -25,24 +26,21 @@ function compareEdges(a: Edge, b: Edge): number {
   );
 }
 
-function evidenceKey(evidence: ClaimEvidence): string {
-  return [
-    evidence.claimId,
-    evidence.sourceId,
-    evidence.stance,
-    evidence.passage ?? "",
-    evidence.passageStart ?? "",
-    evidence.passageEnd ?? "",
-    evidence.methodVersion ?? "",
-  ].join("|");
-}
-
-export class InMemorySourceRepository implements SourceRepository, SourceLineageGapRepository {
+export class InMemorySourceRepository implements SourceRepository, SourceLineageRepository, SourceLineageGapRepository {
   private readonly items = new Map<string, Source>();
   private readonly gaps = new Map<string, SourceLineageGap[]>();
 
   async upsert(source: Source): Promise<void> {
-    this.items.set(source.id, source);
+    const existing = this.items.get(source.id);
+    if (existing) {
+      this.items.set(source.id, {
+        ...source,
+        publisher: existing.publisher,
+        lineage: source.lineage ?? existing.lineage,
+      });
+    } else {
+      this.items.set(source.id, { ...source });
+    }
 
     for (const [fromSourceId, gaps] of this.gaps) {
       const stillOpen = gaps.filter((gap) => gap.unresolvedSourceRef !== source.id);
@@ -50,7 +48,7 @@ export class InMemorySourceRepository implements SourceRepository, SourceLineage
       else this.gaps.set(fromSourceId, stillOpen);
     }
 
-    const unresolved = source.citesSourceIds.filter((citedId) => !this.items.has(citedId));
+    const unresolved = source.citesSourceIds.filter((citedId) => !this.items.has(citedId) && citedId !== source.id);
     if (unresolved.length === 0) {
       this.gaps.delete(source.id);
       return;
@@ -71,6 +69,12 @@ export class InMemorySourceRepository implements SourceRepository, SourceLineage
 
   async list(): Promise<Source[]> {
     return [...this.items.values()].sort(compareById);
+  }
+
+  async listLineage(sourceId: string): Promise<SourceLineage[]> {
+    const source = this.items.get(sourceId);
+    if (!source) return [];
+    return (source.lineage ?? []).map((entry) => ({ ...entry }));
   }
 
   async listLineageGaps(sourceId: string): Promise<SourceLineageGap[]> {
@@ -110,18 +114,62 @@ export class InMemoryClaimRepository implements ClaimRepository {
 
 export class InMemoryClaimEvidenceRepository implements ClaimEvidenceRepository {
   private readonly items = new Map<string, ClaimEvidence[]>();
+  private readonly reviews = new Map<string, ClaimEvidenceReview[]>();
+  private readonly evidenceKey = (evidence: ClaimEvidence): string =>
+    [
+      evidence.claimId,
+      evidence.sourceId,
+      evidence.stance,
+      evidence.passage ?? "",
+      evidence.passageStart ?? "",
+      evidence.passageEnd ?? "",
+      evidence.methodVersion ?? "",
+    ].join("|");
+
   async upsert(evidence: ClaimEvidence): Promise<void> {
-    const list = this.items.get(evidence.claimId) ?? [];
-    const key = evidenceKey(evidence);
-    const index = list.findIndex((candidate) => evidenceKey(candidate) === key);
-    if (index === -1) list.push(evidence);
-    else list[index] = evidence;
-    this.items.set(evidence.claimId, list);
+    await this.upsertMany([evidence]);
   }
+
+  async upsertMany(evidence: readonly ClaimEvidence[]): Promise<void> {
+    for (const item of evidence) {
+      const list = this.items.get(item.claimId) ?? [];
+      const key = this.evidenceKey(item);
+      const index = list.findIndex((candidate) => this.evidenceKey(candidate) === key);
+      if (index === -1) list.push(item);
+      else list[index] = item;
+      this.items.set(item.claimId, list);
+    }
+  }
+
   async list(claimId: string): Promise<ClaimEvidence[]> {
     return [...(this.items.get(claimId) ?? [])].sort((a, b) =>
       `${a.sourceId}:${a.stance}` < `${b.sourceId}:${b.stance}` ? -1 : 1,
     );
+  }
+
+  async listReviews(claimId: string): Promise<ClaimEvidenceReview[]> {
+    return [...(this.reviews.get(claimId) ?? [])].sort((a, b) =>
+      (a.reviewedAt ?? new Date(0)).getTime() - (b.reviewedAt ?? new Date(0)).getTime(),
+    );
+  }
+
+  async applyReview(review: ClaimEvidenceReview): Promise<ClaimEvidenceReview[]> {
+    const list = this.items.get(review.claimId) ?? [];
+    const matches = list.filter((item) => item.sourceId === review.sourceId && item.stance === review.stance);
+    if (matches.length === 0) throw new Error("cannot review evidence that does not exist");
+
+    const reviewedAt = review.reviewedAt ?? new Date();
+    const fromStatus = matches[0]?.status;
+    for (const item of matches) {
+      const index = list.findIndex((candidate) => this.evidenceKey(candidate) === this.evidenceKey(item));
+      if (index >= 0) list[index] = { ...item, status: review.toStatus, methodVersion: review.actor };
+    }
+    this.items.set(review.claimId, list);
+
+    const reviews = this.reviews.get(review.claimId) ?? [];
+    reviews.push({ ...review, fromStatus, reviewedAt });
+    this.reviews.set(review.claimId, reviews);
+    return this.listReviews(review.claimId);
   }
 }
 

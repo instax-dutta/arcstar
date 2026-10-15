@@ -67,6 +67,8 @@ export interface BlastOptions {
   /** Hard ceiling on any single impact score, so a dense graph cannot produce a
    *  meaningless 1e12 that renders useless next to everything else. */
   ceiling: number;
+  /** Upper bound on frontier path states generated during traversal. */
+  maxPathStates?: number;
   /** Restrict traversal to these relations. Defaults to all impact-bearing ones. */
   relations?: readonly RelationType[];
   /**
@@ -141,15 +143,35 @@ export const DEFAULT_BLAST_OPTIONS: BlastOptions = {
   maxHops: 3,
   decay: 0.6,
   ceiling: 1,
+  maxPathStates: 100000,
 };
+
+const DEFAULT_MAX_PATH_STATES = 100000;
+
+/**
+ * Version for graph traversal semantics. Changing propagation, aggregation, tie
+ * breaking, or budgets requires a version bump and a PLAN.md correction.
+ */
+export const GRAPH_METHOD_VERSION = "graph@1.0.0";
+
+export class GraphBudgetError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "GraphBudgetError";
+  }
+}
 
 export interface BlastResult {
   node: string;
   /** Hops from the disrupted node. Always >= 1; the node itself is excluded. */
   hops: number;
   impactScore: number;
-  /** Nodes traversed, starting at the disrupted node and ending at `node`. */
+  /**
+   * One path that reached `node`. The score sums all bounded paths, so this is a
+   * representative example, not a complete derivation.
+   */
   path: string[];
+  pathIsRepresentative: true;
 }
 
 interface Accumulator {
@@ -216,9 +238,13 @@ export function blastRadius(
     ...DEFAULT_BLAST_OPTIONS,
     ...options,
   };
+  const maxPathStates = options.maxPathStates ?? DEFAULT_MAX_PATH_STATES;
 
   if (!Number.isFinite(maxHops) || maxHops < 1) return [];
   if (!Number.isFinite(decay) || decay < 0 || decay > 1) return [];
+  if (!Number.isFinite(ceiling) || ceiling < 0) return [];
+  if (!Number.isFinite(maxPathStates) || maxPathStates < 1) return [];
+  if (asOf !== undefined && Number.isNaN(asOf.getTime())) return [];
 
   // Resolve the edge history before building the adjacency, so a dated query
   // sees the graph as it stood rather than the union of all history.
@@ -239,6 +265,7 @@ export function blastRadius(
   let frontier = new Map<string, Accumulator>([
     [disruptedNode, { score: 1, hops: 0, path: [disruptedNode] }],
   ]);
+  let pathStates = 1;
 
   for (let hop = 1; hop <= maxHops; hop += 1) {
     const next = new Map<string, Accumulator>();
@@ -252,6 +279,10 @@ export function blastRadius(
         if (acc.path.includes(to)) continue;
         const contribution = acc.score * weight * decay;
         if (contribution <= 0) continue;
+        pathStates += 1;
+        if (pathStates > maxPathStates) {
+          throw new GraphBudgetError("blast radius exceeded its path state budget");
+        }
         const existing = next.get(to);
         if (existing) {
           // Several edges converge on `to` at the same level. Every entry in
@@ -294,6 +325,7 @@ export function blastRadius(
       hops: acc.hops,
       impactScore: Math.min(acc.score, ceiling),
       path: acc.path,
+      pathIsRepresentative: true as const,
     }))
     .sort(compareBlastResults);
 }

@@ -1,13 +1,23 @@
 import type { Edge, Node } from "@arcstar/contracts";
 
-const AS_OF = new Date("2026-01-01T00:00:00Z");
+const VALID_FROM = new Date("2026-01-01T00:00:00Z");
+const OBSERVED_AT = new Date("2026-10-01T00:00:00Z");
 
 function node(id: string, type: Node["type"], label: string): Node {
-  return { id, type, label, props: {} };
+  return { id, type, label, props: { evidenceStatus: "seeded-unverified" } };
 }
 
 function edge(from: string, to: string, relation: Edge["relation"], weight: number): Edge {
-  return { from, to, relation, weight, asOf: AS_OF };
+  return {
+    from,
+    to,
+    relation,
+    weight,
+    asOf: VALID_FROM,
+    observedAt: OBSERVED_AT,
+    evidenceRefs: [],
+    verificationState: "unknown",
+  };
 }
 
 export const maritimeNodes: readonly Node[] = [

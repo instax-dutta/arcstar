@@ -31,13 +31,13 @@ function fakeSql(response: QueryResult<unknown>, calls: Array<{ sql: string; par
 }
 
 describe("PostgresAssessmentRepository", () => {
-  it("appends assessments with unique ids and stores the snapshot", async () => {
+  it("appends the same assessment deterministically and stores its snapshot", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql({ rows: [] }, calls);
     const assessment = assessClaim({ claim, allSources: [source], assessedAt: new Date(0) });
     await new PostgresAssessmentRepository(sql).append(assessment);
     await new PostgresAssessmentRepository(sql).append(assessment);
-    expect(calls[0]?.params?.[0]).not.toBe(calls[1]?.params?.[0]);
+    expect(calls[0]?.params?.[0]).toBe(calls[1]?.params?.[0]);
     expect(calls[0]?.sql).toContain("INSERT INTO assessment");
     const storedSnapshot = JSON.parse(String(calls[0]?.params?.[8])) as {
       claim: { id: string };

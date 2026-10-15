@@ -21,8 +21,9 @@ The system is composed of two moats:
 2. **Dependency graph.** A typed, as-of-dated graph with relation-aware blast radius
    computation. See `packages/graph`.
 
-Scores are descriptive, never predictive. Errors are surfaced rather than concealed,
-and users may override any score; overrides feed the public benchmark.
+Scores are descriptive, never predictive. Errors are surfaced rather than concealed.
+There is no public score-override workflow yet; do not treat unreviewed overrides as
+benchmark data.
 
 License: AGPL-3.0. Free, open, no accounts, no paywall.
 
@@ -36,18 +37,17 @@ proven by tests.
 | 0 | Monorepo, contracts, CI, purity gate | Complete |
 | 1 | Credibility core, invariants, golden snapshots | Complete |
 | 2 | Graph core, blast radius, as-of dating | Complete for blast radius; min-cut deferred |
-| 3 | Evaluation protocol and benchmark pilot | Smoke pilot runner and report exist; real labelled corpus does not |
-| 4 | Evidence contracts, persistence, migrations, repositories | Contracts, migrations, repository mappings, assessment snapshots, and evidence review exist; live PostgreSQL verification remains |
-| 5 | Source adapters and reliable ingestion | RSS fixture adapter and idempotent ingestion exist; worker, retries, freshness pending |
-| 6 | Claim extraction, entity resolution, evidence review | Deterministic candidates, entity spans, and persisted evidence review exist; LLM, resolution review, and quality metrics pending |
-| 7 | Evidence-backed dependency corpus and scenarios | Maritime graph seeds and server-owned scenario snapshots exist; expert scenario corpus incomplete |
-| 8 | API and investigation UI | Investigation API workflow and graph/evidence MVP exist; full production UI workflow incomplete |
-| 9 | Hardening, self-hosting, limited beta | Compose, config validation, PostgreSQL wiring, and docs started; security and operations hardening remain |
+| 3 | Evaluation protocol and benchmark | Synthetic smoke runner and fail-closed real gate exist; adjudicated real corpus does not |
+| 4 | Evidence contracts, persistence, migrations, repositories | Contracts, migrations, repositories, transaction path, assessment snapshots, and PostgreSQL integration suite exist; live CI still must pass |
+| 5 | Source adapters and reliable ingestion | RSS/Atom fixture adapter, idempotent identity, and source lineage/gap persistence exist; worker, retries, freshness pending |
+| 6 | Claim extraction, entity resolution, and evidence review | Deterministic candidates, extraction smoke tests, entity spans, evidence writes, and review history exist; LLM workflow and quality measurement on real data pending |
+| 7 | Evidence-backed dependency corpus and scenarios | Maritime seed and server-owned scenario snapshots exist; expert scenario corpus and edge evidence incomplete |
+| 8 | Analyst API and investigation UI | Investigation API workflow and race-safe graph/evidence UI exist; complete production UI workflow not done |
+| 9 | Hardening, self-hosting, limited beta | Config validation, CORS allowlist, rate limits, migration service, readiness health, Docker non-root build, and self-hosting docs exist; security review, observability, and limited beta controls remain |
 
-All 231 tests pass. The pure packages (`contracts`, `credibility`, `graph`,
-`extraction`) keep a 100% coverage gate on statements, branches, functions, and lines;
-the API tracks risks in coverage but does not yet claim completeness. The purity gate
-passes.
+The synthetic credibility benchmark is a smoke test. The real benchmark remains
+**not yet evaluable** until an adjudicated corpus exists and passes `pnpm eval:real`.
+The synthetic pilot cannot satisfy the real benchmark gate.
 
 ## Monorepo structure
 
@@ -207,32 +207,40 @@ Base URL in development: `http://localhost:8787`.
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Liveness check |
-| GET | `/graph` | Server-owned entity and edge graph |
+| GET | `/ready` | Dependency readiness check |
+| GET | `/graph` | Server-owned paginated entity and edge graph |
 | GET | `/claim` | Demo claim and supporting sources |
-| POST | `/score` | Score a claim against a supplied source graph |
-| POST | `/blast-radius` | Compute blast radius for a bounded supplied graph |
+| POST | `/score` | Experimental scoring for a supplied claim and source graph |
+| POST | `/blast-radius` | Experimental blast radius for a supplied bounded graph |
 | POST | `/evidence/candidates` | Extract claim candidates and entity spans from text |
-| GET | `/claims/:id` | Read claim, evidence, and latest assessment |
-| POST | `/claims/:id/evidence` | Add or revise claim evidence |
-| POST | `/claims/:id/assessments` | Create an assessment with an input snapshot |
-| GET | `/sources/:id` | Read a source and explicit lineage gaps |
+| GET | `/claims/:id` | Read claim, evidence, review history, and latest assessment |
+| POST | `/claims/:id/evidence` | Add or revise claim evidence and claim source links |
+| POST | `/claims/:id/evidence/reviews` | Record auditable evidence review status |
+| POST | `/claims/:id/assessments` | Create an assessment with an exact input snapshot |
+| GET | `/sources/:id` | Read a source, full lineage, and explicit lineage gaps |
 | GET | `/scenarios/:node` | Bounded blast radius from a server-owned snapshot |
 
-Date fields cross the HTTP boundary as strings and are coerced at the boundary.
-
-Cross-origin access is allowlist-based. Set `CORS_ALLOWED_ORIGINS` to a comma-separated
-list of `http://` or `https://` origins. Development defaults to
-`http://localhost:5173`; production defaults to no cross-origin origins. Expensive
-routes are rate limited with `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW_MS`.
+Client-supplied `/score` and `/blast-radius` routes are experimental. Product scenarios
+use server-owned snapshots.
 
 ## Falsifiable acceptance criteria
 
-Benchmark (Phase 5, not yet built):
+Credibility benchmark (real gate not yet evaluable):
 
-- Mean score(confirmed-true) - mean score(confirmed-false) >= 0.25
-- AUC >= 0.80
-- Cascade detection >= 90%
-- Claims scoring above 0.7 are true at >= 70% precision
+- `pnpm eval:smoke` runs a synthetic smoke benchmark and must never be reported as the
+  real benchmark result.
+- `pnpm eval:real` fails closed until an adjudicated real corpus exists.
+- The real corpus protocol and held-out gate criteria are documented in
+  `evals/BENCHMARK_PROTOCOL.md`.
+- Planned real criteria: held-out AUC >= 0.80, supported-true minus refuted-false mean
+  score >= 0.25, precision at 0.70 >= 0.70, defined recall, and cascade-collapse
+  accuracy >= 0.90 on declared cascade cases.
+
+Extraction benchmark:
+
+- `pnpm --filter @arcstar/evals eval:extraction-smoke` runs a hand-authored synthetic
+  smoke set only.
+- Real extraction quality is not measured yet.
 
 Graph criteria:
 

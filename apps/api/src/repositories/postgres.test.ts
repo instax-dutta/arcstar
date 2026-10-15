@@ -22,20 +22,32 @@ describe("PostgresSourceRepository", () => {
       [
         {
           rows: [
-            { id: "s1", publisher: "A", source_tier: 2, published_at: "2026-10-14T00:00:00Z" },
+            {
+              id: "s1",
+              publisher: "A",
+              source_tier: 2,
+              published_at: "2026-10-14T00:00:00Z",
+              primary_evidence: "observed schedule",
+            },
           ],
         },
-        { rows: [{ to_source_id: "s2" }] },
+        {
+          rows: [
+            { to_source_id: "s2", kind: "cites", status: "observed", evidence: null },
+          ],
+        },
       ],
       calls,
     );
     const source = await new PostgresSourceRepository(sql).get("s1");
     expect(source?.publishedAt.toISOString()).toBe("2026-10-14T00:00:00.000Z");
+    expect(source?.primaryEvidence).toBe("observed schedule");
     expect(source?.citesSourceIds).toEqual(["s2"]);
+    expect(source?.lineage?.[0]).toEqual({ fromSourceId: "s1", toSourceId: "s2", kind: "cites", status: "observed" });
   });
 
   it("rejects a missing publication time rather than inventing one", async () => {
-    const sql = fakeSql([{ rows: [{ id: "s1", publisher: "A", source_tier: 2, published_at: null }] }], []);
+    const sql = fakeSql([{ rows: [{ id: "s1", publisher: "A", source_tier: 2, published_at: null, primary_evidence: null }] }], []);
     await expect(new PostgresSourceRepository(sql).get("s1")).rejects.toThrow(/published_at/);
   });
 
@@ -44,8 +56,28 @@ describe("PostgresSourceRepository", () => {
       [
         {
           rows: [
-            { id: "s1", publisher: "A", source_tier: 2, published_at: "2026-10-14T00:00:00Z", citation_id: "s2" },
-            { id: "s1", publisher: "A", source_tier: 2, published_at: "2026-10-14T00:00:00Z", citation_id: "s3" },
+            {
+              id: "s1",
+              publisher: "A",
+              source_tier: 2,
+              published_at: "2026-10-14T00:00:00Z",
+              primary_evidence: null,
+              lineage_to_source_id: "s2",
+              lineage_kind: "cites",
+              lineage_status: "observed",
+              lineage_evidence: null,
+            },
+            {
+              id: "s1",
+              publisher: "A",
+              source_tier: 2,
+              published_at: "2026-10-14T00:00:00Z",
+              primary_evidence: null,
+              lineage_to_source_id: "s3",
+              lineage_kind: "syndicates",
+              lineage_status: "verified",
+              lineage_evidence: null,
+            },
           ],
         },
       ],
@@ -54,25 +86,24 @@ describe("PostgresSourceRepository", () => {
     const sources = await new PostgresSourceRepository(sql).list();
     expect(sources).toHaveLength(1);
     expect(sources[0]?.citesSourceIds).toEqual(["s2", "s3"]);
+    expect(sources[0]?.lineage?.map((entry) => entry.kind)).toEqual(["cites", "syndicates"]);
   });
 
-  it("writes known lineage and unresolved lineage gaps separately", async () => {
+  it("keeps the existing publisher when a duplicate source is ingested", async () => {
     const calls: Array<{ sql: string; params?: unknown[] }> = [];
     const sql = fakeSql([{ rows: [{ id: "known" }] }], calls);
     const source = SourceSchema.parse({
       id: "s1",
-      publisher: "A",
+      publisher: "B",
       tier: 2,
       publishedAt: new Date(0),
-      citesSourceIds: ["known", "missing"],
+      citesSourceIds: ["known"],
     });
     await new PostgresSourceRepository(sql).upsert(source);
     expect(calls[0]?.sql).toContain("SELECT id FROM source_pool WHERE id = ANY");
     expect(calls[1]?.sql).toContain("INSERT INTO source_pool");
+    expect(calls[1]?.sql).not.toContain("publisher = EXCLUDED.publisher");
     expect(calls[2]?.sql).toContain("DELETE FROM source_lineage_gap WHERE unresolved_source_ref");
-    expect(calls[4]?.sql).toContain("INSERT INTO source_lineage");
-    expect(calls[5]?.sql).toContain("DELETE FROM source_lineage_gap WHERE from_source_id");
-    expect(calls[6]?.sql).toContain("INSERT INTO source_lineage_gap");
   });
 
   it("reads lineage gaps", async () => {

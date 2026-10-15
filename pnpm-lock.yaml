@@ -26,6 +26,9 @@ importers:
       globals:
         specifier: ^17.12.0
         version: 17.12.0
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
       turbo:
         specifier: ^2.11.5
         version: 2.11.5
@@ -56,6 +59,9 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.5
         version: 2.1.5(hono@4.13.13)
+      fast-xml-parser:
+        specifier: ^4.5.7
+        version: 4.5.7
       hono:
         specifier: ^4.6.0
         version: 4.13.13
@@ -118,6 +124,9 @@ importers:
       '@arcstar/credibility':
         specifier: workspace:*
         version: link:../packages/credibility
+      '@arcstar/extraction':
+        specifier: workspace:*
+        version: link:../packages/extraction
       '@arcstar/graph':
         specifier: workspace:*
         version: link:../packages/graph
@@ -1255,6 +1264,10 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
+  fast-xml-parser@4.5.7:
+    resolution: {integrity: sha512-a6Qh1RMCNbSrU1+sAyAAZH3rTe+OaWJbNZIq0S+ifZciUUOQtlVxBJwoTUE2bYhysmG/RYyI5WJFIKdBahJdrQ==}
+    hasBin: true
+
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
@@ -1635,6 +1648,9 @@ packages:
 
   std-env@4.2.0:
     resolution: {integrity: sha512-oCUKSupKTHX53EyjDtuZQ64pjLJ6yYCtpmEw0goYxtjG9KpbRe8KAsl2tBUGU9DyMcJ0RwJ8GqJAFzMXcXW1Rw==}
+
+  strnum@1.1.2:
+    resolution: {integrity: sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA==}
 
   tinybench@6.2.0:
     resolution: {integrity: sha512-78U2TlB2CnVenajOFzf3BKSm0J6oz5L0NV7g32LCPccvYc0lbWvys4d3uUUCS2B1N8PAf2+aekR8i1KbC3HO7Q==}
@@ -2768,6 +2784,10 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
+  fast-xml-parser@4.5.7:
+    dependencies:
+      strnum: 1.1.2
+
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
@@ -3109,6 +3129,8 @@ snapshots:
   split2@4.2.0: {}
 
   std-env@4.2.0: {}
+
+  strnum@1.1.2: {}
 
   tinybench@6.2.0: {}
 

@@ -1,7 +1,7 @@
-import { randomUUID } from "node:crypto";
 import { AssessmentSchema, type Assessment } from "@arcstar/contracts";
 import type { AssessmentRepository } from "./types.js";
 import { readStoredDate, type SqlClient } from "./postgres.js";
+import { assessmentId } from "../assessment.js";
 
 interface AssessmentRow {
   claim_id: string;
@@ -29,7 +29,7 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
          contradiction = EXCLUDED.contradiction,
          input_snapshot = EXCLUDED.input_snapshot`,
       [
-        randomUUID(),
+        assessmentId(assessment),
         assessment.claimId,
         assessment.score.methodVersion,
         assessment.assessedAt,

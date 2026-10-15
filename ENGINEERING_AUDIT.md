@@ -51,7 +51,7 @@ README.md reports 231 passing tests and describes coverage gates for core pure p
 
 ### A0 — P0: Replace the synthetic pilot as the real benchmark gate
 
-**Status:** Open  
+**Status:** Blocked: protocol, synthetic smoke boundary, and fail-closed real runner implemented; adjudicated real corpus remains a product-owner handoff
 **Affected areas:** [evals/src/generatePilot.ts](https://github.com/instax-dutta/arcstar/blob/main/evals/src/generatePilot.ts), [evals/reports/pilot.v1.json](https://github.com/instax-dutta/arcstar/blob/main/evals/reports/pilot.v1.json), evaluation docs, README and PLAN benchmark criteria.
 
 **Observed risk**
@@ -82,7 +82,7 @@ There is also a gate-alignment risk: the benchmark criteria described in project
 
 ### A1 — P0: Preserve scoring-critical Source fields through PostgreSQL round trips
 
-**Status:** Open  
+**Status:** In progress: primary_evidence and published_at now persist; PostgreSQL integration suite added but live CI result must pass before calling this Done
 **Affected areas:** Source contract; PostgreSQL source repository mapping; migrations; scoring input assembly.
 
 **Observed risk**
@@ -104,7 +104,7 @@ The Source contract includes primaryEvidence, and scoring uses this field as an 
 
 ### A2 — P0: Preserve full source-lineage semantics instead of flattening to citations
 
-**Status:** Open  
+**Status:** Done: full lineage kind/status/evidence persists; unresolved citations remain explicit gaps; tests cover round trips and API exposure
 **Affected areas:** SourceLineageSchema, source repository, source_lineage table, source read/write mapping.
 
 **Observed risk**
@@ -126,7 +126,7 @@ The schema has source-lineage concepts beyond a simple citation, including linea
 
 ### A3 — P0: Define graph path aggregation and prevent misleading explanations
 
-**Status:** Open  
+**Status:** Done: blast results carry a representative path flag, option validation includes ceiling/budget/asOf, and GraphBudgetError is explicit
 **Affected area:** [packages/graph/src/blast.ts](https://github.com/instax-dutta/arcstar/blob/main/packages/graph/src/blast.ts).
 
 **Observed risk**
@@ -151,7 +151,7 @@ Blast-radius propagation sums contributions from paths and keeps one representat
 
 ### A4 — P0: Unify temporal edge-history semantics across memory and PostgreSQL
 
-**Status:** Open  
+**Status:** Done: observed_at and valid_from are distinct; memory and Postgres use latest revision then maximum weight; tests cover equal timestamps and invalid dates
 **Affected areas:** apps/api/src/repositories/postgresEdge.ts, graph in-memory temporal resolver, migrations.
 
 **Observed risk**
@@ -174,7 +174,7 @@ The PostgreSQL listAsOf query reportedly resolves competing rows using DISTINCT 
 
 ### A5 — P0: Make assessment inputs complete, persisted, and reproducible
 
-**Status:** Open  
+**Status:** Done: reviewed contradictions are resolved into assessments, snapshots store claim/sources/contradictions, assessment IDs are deterministic, and reproduction is tested
 **Affected areas:** [apps/api/src/app.ts](https://github.com/instax-dutta/arcstar/blob/main/apps/api/src/app.ts), assessment orchestration, credibility package, claim/source/evidence repositories.
 
 **Observed risk**
@@ -200,7 +200,7 @@ The claim-assessment route appears to load the claim and all sources and call as
 
 ### A6 — P0: Make multi-record database mutations atomic and verify against real PostgreSQL
 
-**Status:** Open  
+**Status:** In progress: transaction boundaries, migration runner, PostgreSQL CI, rollback test, and constrained integration suite are added; live CI pass is still required
 **Affected areas:** apps/api/src/repositories/, migrations, data-layer construction, self-hosting docs and CI workflows.
 
 **Observed risk**
@@ -225,7 +225,7 @@ Several repository workflows make a sequence of independent statements: for exam
 
 ### A7 — P0: Enforce the documented benchmark gate, not a weaker approximation
 
-**Status:** Open  
+**Status:** Done: real and synthetic runs are separate, the real runner enforces documented metrics and fails closed, and documentation no longer conflates them
 **Affected areas:** evaluation runner, README.md, PLAN.md section 6.1, IMPLEMENTATION_PLAN.md.
 
 **Observed risk**
@@ -249,7 +249,7 @@ Project docs describe multiple go/no-go targets, including threshold precision a
 
 ### B1 — Use server-owned graph snapshots for product blast-radius analysis
 
-**Status:** Open  
+**Status:** Done: client /score and /blast-radius are labeled experimental; product scenarios use server-owned snapshots with query metadata
 **Affected area:** apps/api/src/app.ts, /blast-radius request schema and response.
 
 The endpoint accepts a caller-supplied graph (with bounded but sizable node/edge counts and a maximum hop count reportedly up to 10). Its response identifies the graph as client-provided. This is useful for an explicitly experimental graph-analysis utility, but it is not an evidence-backed product answer.
@@ -266,7 +266,7 @@ The endpoint accepts a caller-supplied graph (with bounded but sizable node/edge
 
 ### B2 — Separate publisher/source identity from individual document identity
 
-**Status:** Open  
+**Status:** Open: URL normalization, GUID precedence, publisher retention, and invalid-item skipping are fixed; document and revision identity persistence remains incomplete
 **Affected areas:** apps/api/src/ingestion.ts, RSS adapter, Source and Document contracts, persistence.
 
 **Observed risk**
@@ -287,7 +287,7 @@ Ingestion appears to derive a source ID from a hash of the raw URL (truncated) a
 
 ### B3 — Replace regex-only RSS parsing with a maintained parser
 
-**Status:** Open  
+**Status:** Done: RSS/Atom parsing uses a maintained parser, malformed items are isolated, and unsupported documents fail clearly
 **Affected area:** apps/api/src/adapters/rss.ts.
 
 **Observed risk**
@@ -307,7 +307,7 @@ The parser appears to handle only a limited RSS fixture format using regular exp
 
 ### B4 — Connect reviewed contradictions to assessment and make review history auditable
 
-**Status:** Open  
+**Status:** Done: review history is append-only and auditable; assessments reference the snapshot used and do not rewrite old evidence
 **Affected areas:** ClaimEvidence, evidence review route and repository, assessment input builder.
 
 Evidence records use several stances, but assessment generation may not resolve them all into scoring inputs. Review-state updates also need an explicit audit model. A single current status is not the same as a history of who changed the review and why.
@@ -326,7 +326,7 @@ Evidence records use several stances, but assessment generation may not resolve 
 
 ### B5 — Harden rate limiting, trusted proxies, and resource budgets
 
-**Status:** Open  
+**Status:** In progress: trusted proxy logic, readiness route, pagination for /graph, explicit budgets, and config are fixed; unbounded source/assessment list reads remain
 **Affected areas:** apps/api/src/rateLimit.ts, app routing, server deployment configuration.
 
 **Observed risk**
@@ -348,7 +348,7 @@ Rate limiting reportedly falls back to the first X-Forwarded-For value when a so
 
 ### B6 — Make the browser workflow race-safe and expose failures
 
-**Status:** Open  
+**Status:** In progress: browser requests are cancellation-safe and errors are visible; component split and browser failure/race tests remain
 **Affected area:** apps/web/src/App.tsx.
 
 **Observed risk**
@@ -370,7 +370,7 @@ Fetch logic is scattered, a claim identifier is hard-coded, and one scenario fai
 
 ### B7 — Label extraction as candidate generation and test difficult language cases
 
-**Status:** Open  
+**Status:** In progress: span semantics and difficult-language tests exist; real precision/recall measurement remains
 **Affected area:** packages/extraction/src/index.ts and extraction tests.
 
 **Observed risk**
@@ -391,7 +391,7 @@ The deterministic extractor uses fixed trigger phrases and assigns a fixed confi
 
 ### B8 — Correct seed dates, relationship evidence, and edge-weight meaning
 
-**Status:** Open  
+**Status:** In progress: seed nodes/edges are marked unverified and scenario outputs disclose hypothetical shocks; source-backed edge evidence remains incomplete
 **Affected areas:** apps/api/src/data/maritime.ts, maritime graph seed data, edge contracts, scenario UI.
 
 **Observed risk**
@@ -412,7 +412,7 @@ The maritime sample is small and manually seeded (roughly a dozen nodes and a ha
 
 ### B9 — Make container and self-hosting operations repeatable and safe
 
-**Status:** Open  
+**Status:** In progress: migrations are repeatable, production defaults are refused, container is non-root, readiness health and graceful shutdown exist; full operational test remains
 **Affected areas:** apps/api/Dockerfile, docker-compose.yml, migrations, apps/api/src/index.ts, self-hosting docs.
 
 **Observed risk**
@@ -436,25 +436,37 @@ Compose uses known default credentials (the service is bound to localhost, which
 
 ### C1 — Canonicalize snapshot hashing and expose result completeness
 
+**Status:** Done: snapshot IDs canonicalize sorted content and include method/query parameters; omitted asOf is not a wall-clock input
+
 Snapshot IDs should be stable for identical content and query semantics, not differ merely because a fresh wall-clock timestamp was generated for an otherwise unchanged graph. Sort canonicalized nodes/edges, include the true graph revision and relevant method/query parameters, and preserve asOf as explicit metadata. Add tests for order permutations, property insertion order, equivalent timestamps, and changes that should or should not change the hash.
 
 ### C2 — Audit entity property persistence and schema constraints
+
+**Status:** In progress: database enum constraints are added; full Entity property round-trip audit remains
 
 Verify that PostgresEntityRepository round-trips the full Entity contract instead of storing all properties under an external_ids interpretation and reconstructing only selected fields. Add database CHECK constraints for finite relation types and other enum-like contract fields, and test that the database rejects values the API schema would reject. Keep migration and Zod validation aligned.
 
 ### C3 — Paginate, cache, and bound read amplification
 
+**Status:** Open: /graph paginates; source/evidence and assessment list reads still load all matched rows
+
 Avoid loading the entire source pool on every assessment or returning unbounded graph payloads as data grows. Add query plans and indexes for expected filters, pagination/cursors with stable ordering, and request-level limits. Cache only when cache keys include temporal cutoff, snapshot/method version, and other relevant dependencies.
 
 ### C4 — Unify API contracts, errors, and observability
+
+**Status:** In progress: request IDs and stable error categories are present; structured metrics/logging remains
 
 Use stable structured error categories across validation, conflict, missing resource, timeout, database unavailable, and budget exhaustion. Add request correlation IDs, route latency/error metrics, ingestion freshness, queue/retry metrics, and assessment snapshot IDs. Never return stack traces or sensitive SQL details to clients.
 
 ### C5 — Align user-facing claims about override workflows and product maturity
 
+**Status:** Done: README and PLAN no longer claim an unreviewed override workflow
+
 README.md says users may override any score and that overrides feed the public benchmark. The reviewed routes did not appear to expose a complete general override workflow. Verify current routes before changing docs. Either implement a governed, auditable review/override flow and benchmark ingestion policy or narrow the product claim. Never put unreviewed user overrides directly into a public benchmark without provenance, validation, and abuse controls.
 
 ### C6 — Explicitly initialize seeded in-memory data and document demo scope
+
+**Status:** Done: data-layer readiness is explicit before serve and in-memory seeding happens during ready
 
 Avoid relying on async methods with currently synchronous effects to finish seeding before a request arrives. Expose data-layer readiness or initialize the seed deterministically before accepting traffic. Keep example/demo graph status visible in API and UI.
 

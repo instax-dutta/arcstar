@@ -13,6 +13,7 @@ services.
 
 ```bash
 pnpm install
+pnpm build
 pnpm --filter @arcstar/api dev
 ```
 
@@ -20,17 +21,20 @@ The API listens on `http://localhost:8787` by default.
 
 ## Docker Compose
 
-The Compose stack runs PostgreSQL and the API. With `DATABASE_URL` set, the API uses
-the PostgreSQL repositories for entities, edges, claims, claim evidence, sources,
-lineage gaps, and assessments. Without it, the API uses in-memory repositories.
+The Compose stack runs PostgreSQL, applies migrations through a dedicated `migrate`
+service, then starts the API. The API uses PostgreSQL repositories when `DATABASE_URL`
+is set and in-memory repositories when it is not.
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`. Apply the
-migrations before using persisted claims or scenarios.
+The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`.
+
+Production mode refuses the bundled `arcstar/arcstar` database credentials. Set
+`POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` before starting a production
+deployment.
 
 ## Environment variables
 
@@ -41,39 +45,65 @@ migrations before using persisted claims or scenarios.
 | `CORS_ALLOWED_ORIGINS` | Comma-separated allowed browser origins | `http://localhost:5173` in development, empty in production |
 | `RATE_LIMIT_MAX` | Expensive-route requests per window before HTTP 429 | `60` |
 | `RATE_LIMIT_WINDOW_MS` | Rate-limit window in milliseconds | `60000` |
+| `TRUSTED_PROXIES` | Comma-separated immediate peers allowed to send `X-Forwarded-For` | empty |
 | `POSTGRES_USER` | PostgreSQL user | `arcstar` |
 | `POSTGRES_PASSWORD` | PostgreSQL password | `arcstar` |
 | `POSTGRES_DB` | PostgreSQL database | `arcstar` |
-| `DATABASE_URL` | PostgreSQL connection string; enables persisted repositories | unset locally |
+| `DATABASE_URL` | PostgreSQL connection string; enables persisted repositories and migrations | unset locally |
 
-## Database migrations
+## Migrations
 
-Canonical migration files live in `migrations/`. Apply them in order with your PostgreSQL
-client or migration tool:
+Canonical migration files live in `migrations/`. Apply them in order with:
 
 ```bash
-for migration in migrations/*.sql; do
-  psql "$DATABASE_URL" -f "$migration"
-done
+DATABASE_URL=postgres://user:pass@localhost:5432/arcstar pnpm migrate
 ```
 
-The PostgreSQL repository mapping is exercised through a fake SQL client and route
-integration tests, not through a live database in unit CI. Run the migration and smoke
-suite against a real PostgreSQL instance during deployment verification.
+The migration runner:
+
+- creates `schema_migration`
+- applies each migration once
+- rolls back the whole migration if a migration fails
+
+## Backup and restore
+
+PostgreSQL is the source of truth when `DATABASE_URL` is set.
+
+Backup:
+
+```bash
+pg_dump "$DATABASE_URL" > arcstar-backup.sql
+```
+
+Restore:
+
+```bash
+psql "$DATABASE_URL" -f arcstar-backup.sql
+```
+
+After restoring a database from an older Arcstar version, run `pnpm migrate` to apply any
+new forward-only migrations. There is no automatic downgrade.
 
 ## API routes used by the investigation workflow
 
-- `GET /claims/:id`: claim, evidence, and latest assessment.
-- `POST /claims/:id/evidence`: add or revise reviewable claim evidence.
-- `POST /claims/:id/assessments`: create an assessment and store its input snapshot.
-- `GET /sources/:id`: source and explicit unresolved lineage gaps.
-- `GET /scenarios/:node`: server-owned snapshot bounded blast-radius result.
+- `GET /health`: liveness only.
+- `GET /ready`: dependency readiness.
+- `GET /claims/:id`: claim, evidence, review history, and latest assessment.
+- `POST /claims/:id/evidence`: add or revise claim evidence and update claim source links.
+- `POST /claims/:id/evidence/reviews`: record an auditable review status transition.
+- `POST /claims/:id/assessments`: create an assessment with an input snapshot.
+- `GET /sources/:id`: source, full lineage records, and explicit lineage gaps.
+- `GET /scenarios/:node`: server-owned bounded graph scenario snapshot.
+
+`/score` and `/blast-radius` accept client-supplied graphs. They are experimental
+utilities, not persisted product assessments.
 
 ## Rate limiting and CORS
 
 Expensive routes use a bounded in-memory fixed-window limitor. For multi-process
 deployments, terminate rate limiting at the reverse proxy or replace it with shared
-state. Browser origins are allowlisted and must be configured explicitly.
+state. Browser origins are allowlisted. `X-Forwarded-For` is trusted only when the
+immediate peer is listed in `TRUSTED_PROXIES`.
 
 ## Hardening notes
 

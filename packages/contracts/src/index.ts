@@ -28,6 +28,19 @@ const ValidDate = z.date().refine((value) => !Number.isNaN(value.getTime()), {
   message: "must be a valid date",
 });
 
+export const SourceLineageKindSchema = z.enum(["cites", "syndicates", "quotes", "shared_release", "inferred", "unknown"]);
+
+export const SourceLineageSchema = z.object({
+  fromSourceId: NonEmptyString,
+  toSourceId: NonEmptyString,
+  kind: SourceLineageKindSchema,
+  status: z.enum(["observed", "verified", "disputed", "unknown"]),
+  evidence: NonEmptyString.optional(),
+});
+
+export type SourceLineageKind = z.infer<typeof SourceLineageKindSchema>;
+export type SourceLineage = z.infer<typeof SourceLineageSchema>;
+
 export const SourceSchema = z
   .object({
     id: NonEmptyString,
@@ -40,6 +53,13 @@ export const SourceSchema = z
      */
     citesSourceIds: z.array(NonEmptyString),
     primaryEvidence: NonEmptyString.optional(),
+    /**
+     * Optional full lineage records for `citesSourceIds`. If present, every record
+     * must use this source as `fromSourceId` and reference a listed citation. This
+     * keeps `citesSourceIds` as the scoring list without flattening lineage kind,
+     * verification state, and evidence to a single citation type.
+     */
+    lineage: z.array(SourceLineageSchema).optional(),
   })
   .superRefine((source, ctx) => {
     if (source.citesSourceIds.includes(source.id)) {
@@ -49,6 +69,24 @@ export const SourceSchema = z
         message: "a source may not cite itself",
       });
     }
+
+    const citations = new Set(source.citesSourceIds);
+    source.lineage?.forEach((entry, index) => {
+      if (entry.fromSourceId !== source.id) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["lineage", index, "fromSourceId"],
+          message: "lineage fromSourceId must match the source id",
+        });
+      }
+      if (!citations.has(entry.toSourceId)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["lineage", index, "toSourceId"],
+          message: "lineage toSourceId must also appear in citesSourceIds",
+        });
+      }
+    });
   });
 
 export const ClaimSchema = z
@@ -116,10 +154,18 @@ export const EdgeSchema = z
     from: NonEmptyString,
     to: NonEmptyString,
     relation: RelationTypeSchema,
-    /** Strength of the dependency, 0..1. */
+    /** Strength of the dependency, 0..1. Weight semantics are documented by PLAN.md. */
     weight: z.number().min(0).max(1),
     /** Edges are as-of dated so we can ask "what depended on this, and when". */
     asOf: ValidDate,
+    /**
+     * When Arcstar observed this edge revision. Valid time (`asOf`) answers when
+     * the fact applies; observation time answers when we learned it. If omitted,
+     * observation time is the same as valid time.
+     */
+    observedAt: ValidDate.optional(),
+    verificationState: z.enum(["verified", "estimated", "disputed", "unknown"]).optional(),
+    evidenceRefs: z.array(NonEmptyString).optional(),
   })
   .superRefine((edge, ctx) => {
     if (edge.from === edge.to) {
@@ -219,15 +265,18 @@ export const ClaimEvidenceSchema = z
     }
   });
 
-export const SourceLineageKindSchema = z.enum(["cites", "syndicates", "quotes", "shared_release", "inferred", "unknown"]);
-
-export const SourceLineageSchema = z.object({
-  fromSourceId: NonEmptyString,
-  toSourceId: NonEmptyString,
-  kind: SourceLineageKindSchema,
-  status: z.enum(["observed", "verified", "disputed", "unknown"]),
-  evidence: NonEmptyString.optional(),
+export const ClaimEvidenceReviewSchema = z.object({
+  claimId: NonEmptyString,
+  sourceId: NonEmptyString,
+  stance: ClaimStanceSchema,
+  actor: NonEmptyString,
+  reason: NonEmptyString.optional(),
+  reviewedAt: ValidDate.optional(),
+  fromStatus: z.enum(["resolved", "unresolved", "disputed"]).optional(),
+  toStatus: z.enum(["resolved", "unresolved", "disputed"]),
 });
+
+export type ClaimEvidenceReview = z.infer<typeof ClaimEvidenceReviewSchema>;
 
 /**
  * A citation that cannot be resolved to a known source pool entry. The raw URL,
@@ -243,6 +292,4 @@ export const SourceLineageGapSchema = z.object({
 
 export type ClaimStance = z.infer<typeof ClaimStanceSchema>;
 export type ClaimEvidence = z.infer<typeof ClaimEvidenceSchema>;
-export type SourceLineageKind = z.infer<typeof SourceLineageKindSchema>;
-export type SourceLineage = z.infer<typeof SourceLineageSchema>;
 export type SourceLineageGap = z.infer<typeof SourceLineageGapSchema>;

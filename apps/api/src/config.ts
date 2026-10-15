@@ -5,6 +5,23 @@ export interface AppConfig {
   corsOrigins: string[];
   rateLimitMax: number;
   rateLimitWindowMs: number;
+  trustedProxies: string[];
+}
+
+function parseTrustedProxies(env: Record<string, string | undefined>): string[] {
+  return (env.TRUSTED_PROXIES ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+}
+
+function hasDefaultCredentials(databaseUrl: string): boolean {
+  try {
+    const url = new URL(databaseUrl);
+    return url.username === "arcstar" && url.password === "arcstar";
+  } catch {
+    return false;
+  }
 }
 
 function parsePositiveInteger(
@@ -51,6 +68,10 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     throw new Error("DATABASE_URL must be a postgres:// or postgresql:// connection string");
   }
 
+  if (rawEnv === "production" && databaseUrl !== undefined && hasDefaultCredentials(databaseUrl)) {
+    throw new Error("production mode refuses the bundled arcstar/arcstar database credentials");
+  }
+
   return {
     nodeEnv: rawEnv,
     port,
@@ -58,5 +79,6 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     corsOrigins: parseOrigins(env, rawEnv),
     rateLimitMax: parsePositiveInteger(env.RATE_LIMIT_MAX, 60, 1, 1_000_000, "RATE_LIMIT_MAX"),
     rateLimitWindowMs: parsePositiveInteger(env.RATE_LIMIT_WINDOW_MS, 60_000, 1, 3_600_000, "RATE_LIMIT_WINDOW_MS"),
+    trustedProxies: parseTrustedProxies(env),
   };
 }

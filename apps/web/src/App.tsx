@@ -4,7 +4,7 @@ import Graph from "graphology";
 
 interface WebNode { id: string; type: string; label: string; props: Record<string, unknown>; }
 interface WebEdge { from: string; to: string; relation: string; weight: number; asOf: string; }
-interface BlastResult { node: string; hops: number; impactScore: number; path: string[]; }
+interface BlastResult { node: string; hops: number; impactScore: number; path: string[]; pathIsRepresentative: boolean; }
 interface GraphSnapshot { id: string; asOf: string; nodeCount: number; edgeCount: number; }
 
 interface GraphPayload { nodes: WebNode[]; edges: WebEdge[]; }
@@ -13,6 +13,8 @@ interface ClaimPayload { claim: { id: string; text: string }; evidence: Array<{ 
 interface ClaimCandidate { id: string; sentence: string; trigger: string; start: number; end: number; }
 interface EntitySpan { termId: string; matchedAlias: string; start: number; end: number; }
 interface EvidenceExtraction { normalizedText: string; candidates: ClaimCandidate[]; entitySpans: EntitySpan[]; }
+
+const DEFAULT_CLAIM_ID = "claim-hormuz-1";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown request failure";
@@ -25,10 +27,17 @@ export function App() {
   const [results, setResults] = useState<BlastResult[]>([]);
   const [snapshot, setSnapshot] = useState<GraphSnapshot | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [scenarioError, setScenarioError] = useState<string | null>(null);
+  const [scenarioLoading, setScenarioLoading] = useState(false);
   const [claim, setClaim] = useState<ClaimPayload | null>(null);
   const [draftText, setDraftText] = useState("Strait of Hormuz transit halts. European Union confirms rerouting.");
   const [evidence, setEvidence] = useState<EvidenceExtraction | null>(null);
   const [evidenceError, setEvidenceError] = useState<string | null>(null);
+
+  const scenarioRequestRef = useRef(0);
+  const evidenceRequestRef = useRef(0);
+  const scenarioAbortRef = useRef<AbortController | null>(null);
+  const evidenceAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     void fetch("/api/graph")
@@ -44,7 +53,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void fetch("/api/claims/claim-hormuz-1")
+    void fetch(`/api/claims/${DEFAULT_CLAIM_ID}`)
       .then((r) => {
         if (!r.ok) throw new Error(`claim request failed with HTTP ${r.status}`);
         return r.json();
@@ -55,17 +64,28 @@ export function App() {
 
   async function extractEvidence() {
     if (!graphData) return;
+    scenarioAbortRef.current?.abort();
+    evidenceAbortRef.current?.abort();
+    const controller = new AbortController();
+    evidenceAbortRef.current = controller;
+    const requestId = evidenceRequestRef.current + 1;
+    evidenceRequestRef.current = requestId;
     setEvidenceError(null);
+
     try {
       const response = await fetch("/api/evidence/candidates", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ text: draftText, nodes: graphData.nodes }),
+        signal: controller.signal,
       });
       if (!response.ok) throw new Error(`evidence request failed with HTTP ${response.status}`);
       const body = (await response.json()) as EvidenceExtraction;
+      if (requestId !== evidenceRequestRef.current) return;
       setEvidence(body);
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (requestId !== evidenceRequestRef.current) return;
       setEvidence(null);
       setEvidenceError(errorMessage(error));
     }
@@ -87,20 +107,37 @@ export function App() {
     const sigma = new Sigma(graph, containerRef.current);
     sigma.on("clickNode", ({ node }) => {
       setSelected(node);
-      setSnapshot(null);
       setResults([]);
-      void fetch(`/api/scenarios/${node}`)
+      setSnapshot(null);
+      setScenarioError(null);
+
+      evidenceAbortRef.current?.abort();
+      scenarioAbortRef.current?.abort();
+      const controller = new AbortController();
+      scenarioAbortRef.current = controller;
+      const requestId = scenarioRequestRef.current + 1;
+      scenarioRequestRef.current = requestId;
+      setScenarioLoading(true);
+
+      void fetch(`/api/scenarios/${node}`, { signal: controller.signal })
         .then((r) => {
           if (!r.ok) throw new Error(`scenario request failed with HTTP ${r.status}`);
           return r.json();
         })
         .then((body: { snapshot: GraphSnapshot; results: BlastResult[] }) => {
+          if (requestId !== scenarioRequestRef.current) return;
           setSnapshot(body.snapshot);
           setResults(body.results);
         })
-        .catch(() => {
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          if (requestId !== scenarioRequestRef.current) return;
           setSnapshot(null);
           setResults([]);
+          setScenarioError(errorMessage(error));
+        })
+        .finally(() => {
+          if (requestId === scenarioRequestRef.current) setScenarioLoading(false);
         });
     });
 
@@ -116,6 +153,8 @@ export function App() {
         <h2>Arcstar</h2>
         {graphError ? <p className="error">Could not load graph: {graphError}</p> : null}
         {selected ? <p>Disrupted: {selected}</p> : <p>Click a node to compute blast radius.</p>}
+        {scenarioLoading ? <p>Loading server-owned scenario...</p> : null}
+        {scenarioError ? <p className="error">Scenario request failed: {scenarioError}</p> : null}
         {snapshot ? (
           <p className="snapshot">
             Snapshot {snapshot.id.slice(0, 12)}: {snapshot.edgeCount} edges at {snapshot.asOf}
@@ -123,7 +162,7 @@ export function App() {
         ) : null}
         {results.map((result) => (
           <div className="node-item" key={result.node}>
-            <strong>{result.node}</strong> - {result.impactScore.toFixed(3)} (hop {result.hops})
+            <strong>{result.node}</strong> - {result.impactScore.toFixed(3)} (hop {result.hops}; representative path)
           </div>
         ))}
 

@@ -30,8 +30,8 @@ describe("PostgresClaimRepository", () => {
     expect(calls[0]?.sql).toContain("INSERT INTO claim");
     expect(calls[1]?.sql).toContain("DELETE FROM claim_source_link");
     expect(calls.some((call) => call.sql.includes("DELETE FROM claim_evidence"))).toBe(false);
-    expect(calls[2]?.params).toEqual(["c1", "s2", "supports"]);
-    expect(calls[3]?.params).toEqual(["c1", "s3", "contradicts"]);
+    expect(calls[2]?.params).toEqual(["c1", ["s2"], "supports"]);
+    expect(calls[3]?.params).toEqual(["c1", ["s3"], "contradicts"]);
   });
 
   it("reads support and contradiction links for a subject", async () => {

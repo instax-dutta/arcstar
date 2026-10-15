@@ -44,3 +44,38 @@ describe("extractEntitySpans", () => {
     expect(text.slice(spans[0]!.start, spans[0]!.end)).toBe("Suez");
   });
 });
+
+describe("extraction honesty and spans", () => {
+  it("uses offsets against the raw input, not normalized text", () => {
+    const raw = "Café transit halts.    Suez confirms rerouting.";
+    const candidates = extractClaimCandidates(raw);
+    expect(candidates.length).toBe(2);
+    for (const candidate of candidates) {
+      expect(raw.slice(candidate.start, candidate.end)).toBe(candidate.sentence);
+    }
+  });
+
+  it("keeps candidate extraction deterministic for negation and quotation but does not call it truth", () => {
+    const text = "The ministry denied that transit halts. The report said \"transit halts.\"";
+    const candidates = extractClaimCandidates(text);
+    expect(candidates.map((candidate) => candidate.sentence)).toEqual([
+      "The ministry denied that transit halts.",
+      "The report said \"transit halts.\"",
+    ]);
+    expect(candidates.every((candidate) => candidate.confidence === 0.5)).toBe(true);
+  });
+
+  it("returns no candidates for opinion or non-claim text", () => {
+    expect(extractClaimCandidates("This is an opinion about geopolitics.")).toEqual([]);
+  });
+
+  it("matches overlapping aliases without silently preferring an ambiguous entity", () => {
+    const text = "Suez and Hormuz matter.";
+    const spans = extractEntitySpans(text, [
+      { id: "chokepoint/suez", label: "Suez" },
+      { id: "chokepoint/hormuz", label: "Hormuz" },
+    ]);
+    expect(spans.map((span) => span.termId)).toEqual(["chokepoint/suez", "chokepoint/hormuz"]);
+    expect(text.slice(spans[0]!.start, spans[0]!.end)).toBe("Suez");
+  });
+});

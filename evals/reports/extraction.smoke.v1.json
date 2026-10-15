@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "kind": "synthetic-smoke",
+  "version": "extraction-smoke.v1",
+  "caseCount": 3,
+  "metrics": {
+    "candidatePrecision": 1,
+    "candidateRecall": 1,
+    "entityPrecision": 1,
+    "entityRecall": 1
+  },
+  "results": [
+    {
+      "id": "candidate-suez",
+      "candidatePrecision": 1,
+      "candidateRecall": 1,
+      "candidateFalsePositives": 0,
+      "candidateFalseNegatives": 0,
+      "entityPrecision": 1,
+      "entityRecall": 1,
+      "entityFalsePositives": 0,
+      "entityFalseNegatives": 0
+    },
+    {
+      "id": "negation",
+      "candidatePrecision": 1,
+      "candidateRecall": 1,
+      "candidateFalsePositives": 0,
+      "candidateFalseNegatives": 0,
+      "entityPrecision": 1,
+      "entityRecall": 1,
+      "entityFalsePositives": 0,
+      "entityFalseNegatives": 0
+    },
+    {
+      "id": "no-candidate",
+      "candidatePrecision": 1,
+      "candidateRecall": 1,
+      "candidateFalsePositives": 0,
+      "candidateFalseNegatives": 0,
+      "entityPrecision": 1,
+      "entityRecall": 1,
+      "entityFalsePositives": 0,
+      "entityFalseNegatives": 0
+    }
+  ],
+  "notes": "Hand-authored smoke labels only. This is not real-world extraction quality evidence."
+}

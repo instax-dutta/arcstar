@@ -1,9 +1,13 @@
-import type { Assessment, Claim, ClaimEvidence, Edge, Node, Source, SourceLineageGap } from "@arcstar/contracts";
+import type { Assessment, Claim, ClaimEvidence, ClaimEvidenceReview, Edge, Node, Source, SourceLineage, SourceLineageGap } from "@arcstar/contracts";
 
 export interface SourceRepository {
   upsert(source: Source): Promise<void>;
   get(id: string): Promise<Source | undefined>;
   list(): Promise<Source[]>;
+}
+
+export interface SourceLineageRepository {
+  listLineage(sourceId: string): Promise<SourceLineage[]>;
 }
 
 export interface SourceLineageGapRepository {
@@ -25,6 +29,9 @@ export interface ClaimRepository {
 export interface ClaimEvidenceRepository {
   upsert(evidence: ClaimEvidence): Promise<void>;
   list(claimId: string): Promise<ClaimEvidence[]>;
+  upsertMany(evidence: readonly ClaimEvidence[]): Promise<void>;
+  listReviews(claimId: string): Promise<ClaimEvidenceReview[]>;
+  applyReview(review: ClaimEvidenceReview): Promise<ClaimEvidenceReview[]>;
 }
 
 export interface EdgeRepository {
@@ -40,7 +47,7 @@ export interface AssessmentRepository {
 }
 
 export type Repositories = {
-  sources: SourceRepository & SourceLineageGapRepository;
+  sources: SourceRepository & SourceLineageRepository & SourceLineageGapRepository;
   entities: EntityRepository;
   claims: ClaimRepository;
   claimEvidence: ClaimEvidenceRepository;

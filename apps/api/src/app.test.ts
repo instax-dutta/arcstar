@@ -69,6 +69,47 @@ describe("cors and request limits", () => {
   });
 });
 
+describe("experimental client-supplied routes", () => {
+  it("labels score results as experimental", async () => {
+    const res = await app.request("/score", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        claim: {
+          id: "c1",
+          text: "test",
+          subjectNodeId: "n1",
+          assertedAt: "2026-01-01T00:00:00Z",
+          supportingSourceIds: ["s1"],
+          contradictingSourceIds: [],
+          extractionConfidence: 0.9,
+        },
+        allSources: [
+          { id: "s1", publisher: "Wire", tier: 1, publishedAt: "2026-01-01T00:00:00Z", citesSourceIds: [] },
+        ],
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { experimental: boolean; result: { score: { value: number } } };
+    expect(body.experimental).toBe(true);
+    expect(body.result.score.value).toBeGreaterThan(0);
+  });
+
+  it("labels blast-radius results as experimental client data", async () => {
+    const graph = maritimeGraph();
+    const res = await app.request("/blast-radius", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ graph, disruptedNode: "hormuz" }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { experimental: boolean; graphProvidedByClient: boolean; results: unknown[] };
+    expect(body.experimental).toBe(true);
+    expect(body.graphProvidedByClient).toBe(true);
+    expect(body.results.length).toBeGreaterThan(0);
+  });
+});
+
 describe("evidence route", () => {
   it("extracts claim candidates and entity spans from text", async () => {
     const graph = maritimeGraph();

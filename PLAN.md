@@ -49,7 +49,8 @@ receive a complete derivation.
    cannot rescue a garbage source.
 6. **Every score is explainable.** An unexplained score is not shipped.
 7. **Scores are descriptive, never predictive.** The UI must say this.
-8. **Errors are surfaced.** Overrides feed the benchmark.
+8. **Errors are surfaced.** When an override workflow exists, reviewed overrides may feed
+   the benchmark only with provenance, validation, and abuse controls.
 9. **Phase gates hold.** Logic before interface. Tests before commitment.
 10. **The benchmark decides.** AUC below 0.80 means the methodology is not shipped,
     regardless of how clean the code is.
@@ -250,6 +251,10 @@ ambiguous. Sourced from public fact-check networks plus deliberate cascade cases
 - Cascade detection: at least 90% of deliberately cascaded false claims collapse to
   `independence == 1`.
 - Calibration: claims scoring above 0.7 are true at least 70% of the time.
+
+These criteria are not yet satisfied by a real adjudicated corpus. The checked-in
+synthetic pilot in `evals/pilot` is a smoke test only. The real benchmark runner fails
+closed until an adjudicated corpus exists; see `evals/BENCHMARK_PROTOCOL.md`.
 
 ### 8.2 Graph
 

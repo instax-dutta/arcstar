@@ -472,3 +472,35 @@ test.prop([graphArb, fc.integer({ min: 1, max: 5 })], { numRuns: NUM_RUNS })(
     }
   },
 );
+
+describe("blastRadius - budgets and representative paths", () => {
+  const g = {
+    nodes: [
+      { id: "a", type: "company" as const, label: "A", props: {} },
+      { id: "b", type: "company" as const, label: "B", props: {} },
+      { id: "c", type: "company" as const, label: "C", props: {} },
+    ],
+    edges: [
+      { from: "b", to: "a", relation: "supplies" as const, weight: 0.8, asOf: new Date("2026-01-01T00:00:00Z") },
+      { from: "c", to: "b", relation: "supplies" as const, weight: 0.7, asOf: new Date("2026-01-01T00:00:00Z") },
+    ],
+  };
+
+  it("marks a returned path as representative, not a complete derivation", () => {
+    const results = blastRadius(g, "c");
+    expect(results.length).toBeGreaterThan(0);
+    for (const result of results) {
+      expect(result.pathIsRepresentative).toBe(true);
+    }
+  });
+
+  it("fails explicitly when the path state budget is exhausted", () => {
+    expect(() => blastRadius(g, "c", { maxPathStates: 1 })).toThrow(/path state budget/);
+  });
+
+  it("rejects non-finite ceilings and budgets instead of returning non-finite scores", () => {
+    expect(blastRadius(g, "c", { ceiling: Number.NaN })).toEqual([]);
+    expect(blastRadius(g, "c", { maxPathStates: Number.NaN })).toEqual([]);
+    expect(blastRadius(g, "c", { asOf: new Date("nope") })).toEqual([]);
+  });
+});

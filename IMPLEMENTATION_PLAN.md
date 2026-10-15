@@ -163,13 +163,13 @@ Use W3C PROV-O as a compatible conceptual reference for provenance, not as a man
 | 0 | Foundation, monorepo, CI, pure package boundaries | Complete |
 | 1 | Credibility core and deterministic invariants | Complete as implementation; empirical validity unproven |
 | 2 | Dependency graph core and as-of resolution | Core blast-radius behavior implemented; graph corpus and min-cut deferred |
-| 3 | Evaluation protocol and benchmark pilot | Synthetic pilot runner and report exist; real labelled corpus and leakage checks remain |
-| 4 | Evidence contracts, persistence, migrations, repositories | Partial: contracts, migrations, in-memory and PostgreSQL repositories, evidence writes, and assessment snapshots exist; live database integration tests remain |
-| 5 | Source adapters and reliable ingestion pipeline | Partial: RSS/Atom fixture adapter and idempotent ingestion implemented; worker, retries, and freshness visibility remain |
-| 6 | Claim extraction, entity resolution, and evidence review | Partial: deterministic candidate and entity-span extraction plus persisted evidence review implemented; LLM provider workflow and quality measurement remain |
-| 7 | Evidence-backed dependency corpus and scenario evaluation | Partial: maritime graph and server-owned scenario snapshots exist; expert scenario corpus and evidence completeness remain |
-| 8 | Analyst API and investigation UI | Partial: persisted claim/evidence/assessment routes and UI inspector exist; complete investigation workflow not implemented |
-| 9 | Hardening, self-hosting, limited beta | Partial: config validation, CORS allowlist, rate limits, database wiring, self-hosting docs, and Compose exist; security and operations hardening remain |
+| 3 | Evaluation protocol and benchmark pilot | Smoke and real gates are separated; real runner fails closed and protocol is documented; adjudicated real corpus remains blocked |
+| 4 | Evidence contracts, persistence, migrations, repositories | Contracts, transactional repository writes, migrations, PostgreSQL integration CI, evidence history, and assessment snapshots exist; live integration result must pass |
+| 5 | Source adapters and reliable ingestion pipeline | Maintained RSS/Atom parser, idempotent identity, source lineage gaps, and publisher retention exist; worker, retries, freshness, and document revisions remain |
+| 6 | Claim extraction, entity resolution, and evidence review | Deterministic candidates, entity spans, evidence writes, review history, and extraction smoke labels exist; LLM extraction and real quality measurement remain |
+| 7 | Evidence-backed dependency corpus and scenario evaluation | Maritime seed is clearly unverified and server-owned scenarios are reproducible; expert scenario corpus and source-backed edges remain |
+| 8 | Analyst API and investigation UI | Investigation API workflow, race-safe graph/evidence UI, review history, and evidence snapshots exist; complete production workflow and browser tests remain |
+| 9 | Hardening, self-hosting, limited beta | Config validation, CORS allowlist, trusted-proxy rate limits, migration service, readiness health, non-root container, and backup docs exist; security review and operations hardening remain |
 | 10 | Expansion to additional domains and contributors | Deferred until beta gates pass |
 
 Phase numbers describe the updated execution order. The original status table in PLAN.md is historical; this document controls the order of unshipped work. Existing methodological decisions and corrections in PLAN.md remain binding unless explicitly changed with evidence.

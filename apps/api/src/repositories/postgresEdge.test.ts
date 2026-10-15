@@ -34,8 +34,8 @@ describe("PostgresEdgeRepository", () => {
     const sql = fakeSql(
       {
         rows: [
-          { from_entity_id: "a", to_entity_id: "b", relation_type: "depends_on", weight: 0.9, valid_from: "2026-01-01T00:00:00Z" },
-          { from_entity_id: "a", to_entity_id: "b", relation_type: "depends_on", weight: 0.8, valid_from: "2026-01-01T00:00:00Z" },
+          { from_entity_id: "a", to_entity_id: "b", relation_type: "depends_on", weight: 0.9, valid_from: "2026-01-01T00:00:00Z", observed_at: "2026-01-02T00:00:00Z", evidence_refs: [], verification_state: "estimated" },
+          { from_entity_id: "a", to_entity_id: "b", relation_type: "depends_on", weight: 0.8, valid_from: "2026-01-01T00:00:00Z", observed_at: "2026-01-02T00:00:00Z", evidence_refs: [], verification_state: "estimated" },
         ],
       },
       calls,
@@ -49,7 +49,16 @@ describe("PostgresEdgeRepository", () => {
     const sql = fakeSql(
       {
         rows: [
-          { from_entity_id: "a", to_entity_id: "b", relation_type: "depends_on", weight: 0.8, valid_from: "not-a-date" },
+          {
+            from_entity_id: "a",
+            to_entity_id: "b",
+            relation_type: "depends_on",
+            weight: 0.8,
+            valid_from: "not-a-date",
+            observed_at: "2026-01-02T00:00:00Z",
+            evidence_refs: [],
+            verification_state: "estimated",
+          },
         ],
       },
       [],
