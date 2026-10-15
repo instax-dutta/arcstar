@@ -164,12 +164,12 @@ Use W3C PROV-O as a compatible conceptual reference for provenance, not as a man
 | 1 | Credibility core and deterministic invariants | Complete as implementation; empirical validity unproven |
 | 2 | Dependency graph core and as-of resolution | Core blast-radius behavior implemented; graph corpus and min-cut deferred |
 | 3 | Evaluation protocol and benchmark pilot | Synthetic pilot runner and report exist; real labelled corpus and leakage checks remain |
-| 4 | Evidence contracts, persistence, migrations, repositories | Partial: contracts, migrations, in-memory and PostgreSQL source/entity/edge/claim/assessment repositories; full integration not proven |
+| 4 | Evidence contracts, persistence, migrations, repositories | Partial: contracts, migrations, in-memory and PostgreSQL repositories, evidence writes, and assessment snapshots exist; live database integration tests remain |
 | 5 | Source adapters and reliable ingestion pipeline | Partial: RSS/Atom fixture adapter and idempotent ingestion implemented; worker, retries, and freshness visibility remain |
-| 6 | Claim extraction, entity resolution, evidence review | Partial: deterministic candidate and entity-span extraction implemented; LLM/review workflow remains |
-| 7 | Evidence-backed dependency corpus and scenario evaluation | Partial foundation; corpus/evaluation incomplete |
-| 8 | Analyst API and investigation UI | Partial: evidence candidates endpoint and UI panel added; full investigation workflow not implemented |
-| 9 | Hardening, self-hosting, limited beta | Partial: config validation, self-hosting docs, Docker Compose started; security and operations hardening remain |
+| 6 | Claim extraction, entity resolution, and evidence review | Partial: deterministic candidate and entity-span extraction plus persisted evidence review implemented; LLM provider workflow and quality measurement remain |
+| 7 | Evidence-backed dependency corpus and scenario evaluation | Partial: maritime graph and server-owned scenario snapshots exist; expert scenario corpus and evidence completeness remain |
+| 8 | Analyst API and investigation UI | Partial: persisted claim/evidence/assessment routes and UI inspector exist; complete investigation workflow not implemented |
+| 9 | Hardening, self-hosting, limited beta | Partial: config validation, CORS allowlist, rate limits, database wiring, self-hosting docs, and Compose exist; security and operations hardening remain |
 | 10 | Expansion to additional domains and contributors | Deferred until beta gates pass |
 
 Phase numbers describe the updated execution order. The original status table in PLAN.md is historical; this document controls the order of unshipped work. Existing methodological decisions and corrections in PLAN.md remain binding unless explicitly changed with evidence.
@@ -316,7 +316,7 @@ A reproducible benchmark report and pilot dataset exist; leakage checks pass; th
 
 **Priority: P0.**
 
-**Status: Partial. Claim-evidence, source-lineage, and assessment contracts exist. Ordered migration, in-memory repositories, PostgreSQL source/entity/edge/claim/assessment repositories, and idempotent feed ingestion exist. Full repository coverage, integration tests, document/revision handling, and restart preservation remain.**
+**Status: Partial. Claim-evidence, source-lineage, assessment, and lineage-gap contracts exist. Ordered migrations, in-memory and PostgreSQL repositories, evidence writes, assessment input snapshots, and server-owned scenario reads exist. Live database migration/verification, document/revision handling, and restart preservation remain.**
 
 ### Purpose
 Replace demo-only data paths with durable, auditable canonical records while preserving existing pure packages.
@@ -506,7 +506,7 @@ A new user can run the initial investigation from persisted source documents thr
 
 **Priority: P1 after a usable end-to-end vertical slice.**
 
-**Status: Partial. Environment validation, Docker Compose, sample env file, and self-hosting documentation exist. Security hardening, observability, backup/restore verification, and limited-beta controls remain.**
+**Status: Partial. Environment validation, CORS allowlist, bounded single-process rate limits, PostgreSQL repository wiring, Docker Compose, and self-hosting documentation exist. Security review, observability, backup/restore verification, multi-process rate limiting, and limited-beta controls remain.**
 
 ### Security and reliability
 - Threat-model ingestion, external documents, model extraction, API computation, secrets, and persistent records.

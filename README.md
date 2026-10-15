@@ -44,7 +44,7 @@ proven by tests.
 | 8 | API and investigation UI | Investigation API workflow and graph/evidence MVP exist; full production UI workflow incomplete |
 | 9 | Hardening, self-hosting, limited beta | Compose, config validation, PostgreSQL wiring, and docs started; security and operations hardening remain |
 
-All 217 tests pass. The pure packages (`contracts`, `credibility`, `graph`,
+All 231 tests pass. The pure packages (`contracts`, `credibility`, `graph`,
 `extraction`) keep a 100% coverage gate on statements, branches, functions, and lines;
 the API tracks risks in coverage but does not yet claim completeness. The purity gate
 passes.

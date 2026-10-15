@@ -8,7 +8,7 @@
 - Name: Arcstar
 - Purpose: Open-source geopolitical intelligence. Credibility scoring as infrastructure, dependency graph as the interface.
 - Answers: "if X happens, what breaks, ranked, and how confident are we in each link."
-- Status: Core credibility/graph packages and basic API/web shells are implemented; ingestion, persistence, benchmark validation, and production hardening remain incomplete. See PLAN.md for methodology and engineering contracts, and IMPLEMENTATION_PLAN.md for phase order and exit gates.
+- Status: Core credibility/graph packages are implemented. API and web shells, extraction candidates, RSS ingestion, PostgreSQL repository mappings, assessment snapshots, source lineage gaps, rate limiting, and a partial persisted investigation workflow exist. Real benchmark validation, live ingestion workers, full UI workflow, and production hardening remain incomplete. See PLAN.md for methodology and engineering contracts, and IMPLEMENTATION_PLAN.md for phase order and exit gates.
 - License: AGPL-3.0. Free and open, no accounts, no paywall.
 
 ## Project-Wide Contracts
