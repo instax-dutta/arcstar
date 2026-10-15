@@ -90,6 +90,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build workspace
+        run: pnpm build
       - name: Apply migrations
         run: pnpm run migrate
       - name: Integration tests
