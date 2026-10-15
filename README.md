@@ -37,12 +37,12 @@ proven by tests.
 | 1 | Credibility core, invariants, golden snapshots | Complete |
 | 2 | Graph core, blast radius, as-of dating | Complete for blast radius; min-cut deferred |
 | 3 | Evaluation protocol and benchmark pilot | Smoke pilot runner and report exist; real labelled corpus does not |
-| 4 | Evidence contracts, persistence, migrations, repositories | Contracts, migration, in-memory and PostgreSQL repositories exist; full integration pending |
+| 4 | Evidence contracts, persistence, migrations, repositories | Contracts, migrations, repository mappings, assessment snapshots, and evidence review exist; live PostgreSQL verification remains |
 | 5 | Source adapters and reliable ingestion | RSS fixture adapter and idempotent ingestion exist; worker, retries, freshness pending |
-| 6 | Claim extraction, entity resolution, evidence review | Deterministic candidates and entity spans exist; LLM, review, quality metrics pending |
-| 7 | Evidence-backed dependency corpus and scenarios | Maritime graph seeds and blast tests exist; expert scenario corpus incomplete |
-| 8 | API and investigation UI | API and graph MVP plus evidence extraction endpoint; full investigation workflow incomplete |
-| 9 | Hardening, self-hosting, limited beta | Compose, config validation, and docs started; security and operations hardening incomplete |
+| 6 | Claim extraction, entity resolution, evidence review | Deterministic candidates, entity spans, and persisted evidence review exist; LLM, resolution review, and quality metrics pending |
+| 7 | Evidence-backed dependency corpus and scenarios | Maritime graph seeds and server-owned scenario snapshots exist; expert scenario corpus incomplete |
+| 8 | API and investigation UI | Investigation API workflow and graph/evidence MVP exist; full production UI workflow incomplete |
+| 9 | Hardening, self-hosting, limited beta | Compose, config validation, PostgreSQL wiring, and docs started; security and operations hardening remain |
 
 All 217 tests pass. The pure packages (`contracts`, `credibility`, `graph`,
 `extraction`) keep a 100% coverage gate on statements, branches, functions, and lines;
@@ -207,17 +207,23 @@ Base URL in development: `http://localhost:8787`.
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Liveness check |
-| GET | `/graph` | Demo dependency graph |
+| GET | `/graph` | Server-owned entity and edge graph |
 | GET | `/claim` | Demo claim and supporting sources |
-| POST | `/score` | Score a claim against a source graph |
+| POST | `/score` | Score a claim against a supplied source graph |
 | POST | `/blast-radius` | Compute blast radius for a bounded supplied graph |
 | POST | `/evidence/candidates` | Extract claim candidates and entity spans from text |
+| GET | `/claims/:id` | Read claim, evidence, and latest assessment |
+| POST | `/claims/:id/evidence` | Add or revise claim evidence |
+| POST | `/claims/:id/assessments` | Create an assessment with an input snapshot |
+| GET | `/sources/:id` | Read a source and explicit lineage gaps |
+| GET | `/scenarios/:node` | Bounded blast radius from a server-owned snapshot |
 
 Date fields cross the HTTP boundary as strings and are coerced at the boundary.
 
 Cross-origin access is allowlist-based. Set `CORS_ALLOWED_ORIGINS` to a comma-separated
 list of `http://` or `https://` origins. Development defaults to
-`http://localhost:5173`; production defaults to no cross-origin origins.
+`http://localhost:5173`; production defaults to no cross-origin origins. Expensive
+routes are rate limited with `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW_MS`.
 
 ## Falsifiable acceptance criteria
 

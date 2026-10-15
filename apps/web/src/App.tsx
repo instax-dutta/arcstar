@@ -5,8 +5,10 @@ import Graph from "graphology";
 interface WebNode { id: string; type: string; label: string; props: Record<string, unknown>; }
 interface WebEdge { from: string; to: string; relation: string; weight: number; asOf: string; }
 interface BlastResult { node: string; hops: number; impactScore: number; path: string[]; }
+interface GraphSnapshot { id: string; asOf: string; nodeCount: number; edgeCount: number; }
 
 interface GraphPayload { nodes: WebNode[]; edges: WebEdge[]; }
+interface ClaimPayload { claim: { id: string; text: string }; evidence: Array<{ sourceId: string; stance: string; passage?: string; status: string }>; assessment: { score: { value: number; methodVersion: string }; inputSnapshotRef: string } | null; }
 
 interface ClaimCandidate { id: string; sentence: string; trigger: string; start: number; end: number; }
 interface EntitySpan { termId: string; matchedAlias: string; start: number; end: number; }
@@ -21,7 +23,9 @@ export function App() {
   const [graphData, setGraphData] = useState<GraphPayload | null>(null);
   const [graphError, setGraphError] = useState<string | null>(null);
   const [results, setResults] = useState<BlastResult[]>([]);
+  const [snapshot, setSnapshot] = useState<GraphSnapshot | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [claim, setClaim] = useState<ClaimPayload | null>(null);
   const [draftText, setDraftText] = useState("Strait of Hormuz transit halts. European Union confirms rerouting.");
   const [evidence, setEvidence] = useState<EvidenceExtraction | null>(null);
   const [evidenceError, setEvidenceError] = useState<string | null>(null);
@@ -37,6 +41,16 @@ export function App() {
         setGraphError(null);
       })
       .catch((error: unknown) => setGraphError(errorMessage(error)));
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/claims/claim-hormuz-1")
+      .then((r) => {
+        if (!r.ok) throw new Error(`claim request failed with HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: ClaimPayload) => setClaim(data))
+      .catch(() => setClaim(null));
   }, []);
 
   async function extractEvidence() {
@@ -73,21 +87,21 @@ export function App() {
     const sigma = new Sigma(graph, containerRef.current);
     sigma.on("clickNode", ({ node }) => {
       setSelected(node);
-      const payload = {
-        graph: { nodes: graphData.nodes, edges: graphData.edges },
-        disruptedNode: node,
-      };
-      void fetch("/api/blast-radius", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      })
+      setSnapshot(null);
+      setResults([]);
+      void fetch(`/api/scenarios/${node}`)
         .then((r) => {
-          if (!r.ok) throw new Error(`blast-radius request failed with HTTP ${r.status}`);
+          if (!r.ok) throw new Error(`scenario request failed with HTTP ${r.status}`);
           return r.json();
         })
-        .then((body: { results: BlastResult[] }) => setResults(body.results))
-        .catch(() => setResults([]));
+        .then((body: { snapshot: GraphSnapshot; results: BlastResult[] }) => {
+          setSnapshot(body.snapshot);
+          setResults(body.results);
+        })
+        .catch(() => {
+          setSnapshot(null);
+          setResults([]);
+        });
     });
 
     return () => {
@@ -102,11 +116,37 @@ export function App() {
         <h2>Arcstar</h2>
         {graphError ? <p className="error">Could not load graph: {graphError}</p> : null}
         {selected ? <p>Disrupted: {selected}</p> : <p>Click a node to compute blast radius.</p>}
+        {snapshot ? (
+          <p className="snapshot">
+            Snapshot {snapshot.id.slice(0, 12)}: {snapshot.edgeCount} edges at {snapshot.asOf}
+          </p>
+        ) : null}
         {results.map((result) => (
           <div className="node-item" key={result.node}>
             <strong>{result.node}</strong> - {result.impactScore.toFixed(3)} (hop {result.hops})
           </div>
         ))}
+
+        {claim ? (
+          <section className="claim">
+            <h3>Persisted claim</h3>
+            <p>{claim.claim.text}</p>
+            {claim.assessment ? (
+              <p>
+                Score {claim.assessment.score.value.toFixed(3)} by {claim.assessment.score.methodVersion}
+              </p>
+            ) : (
+              <p>No stored assessment yet.</p>
+            )}
+            <h4>Evidence</h4>
+            {claim.evidence.map((item) => (
+              <div className="node-item" key={`${item.sourceId}-${item.stance}`}>
+                <strong>{item.sourceId}</strong> - {item.stance}
+                {item.passage ? `: ${item.passage}` : ""} ({item.status})
+              </div>
+            ))}
+          </section>
+        ) : null}
 
         <section className="evidence">
           <h3>Evidence extraction</h3>

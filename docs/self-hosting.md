@@ -20,15 +20,17 @@ The API listens on `http://localhost:8787` by default.
 
 ## Docker Compose
 
-The Compose stack runs PostgreSQL and the API. PostgreSQL is optional today, but it is
-included for persistence work and local development.
+The Compose stack runs PostgreSQL and the API. With `DATABASE_URL` set, the API uses
+the PostgreSQL repositories for entities, edges, claims, claim evidence, sources,
+lineage gaps, and assessments. Without it, the API uses in-memory repositories.
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`.
+The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`. Apply the
+migrations before using persisted claims or scenarios.
 
 ## Environment variables
 
@@ -36,12 +38,13 @@ The API binds to `127.0.0.1:8787`. PostgreSQL binds to `127.0.0.1:5432`.
 |---|---|---|
 | `PORT` | API port | `8787` |
 | `NODE_ENV` | Runtime environment | `development` |
-| `LOG_LEVEL` | Reserved for future structured logging | `info` |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated allowed browser origins | `http://localhost:5173` in development, empty in production |
+| `RATE_LIMIT_MAX` | Expensive-route requests per window before HTTP 429 | `60` |
+| `RATE_LIMIT_WINDOW_MS` | Rate-limit window in milliseconds | `60000` |
 | `POSTGRES_USER` | PostgreSQL user | `arcstar` |
 | `POSTGRES_PASSWORD` | PostgreSQL password | `arcstar` |
 | `POSTGRES_DB` | PostgreSQL database | `arcstar` |
-| `DATABASE_URL` | PostgreSQL connection string | `postgres://arcstar:arcstar@localhost:5432/arcstar` |
+| `DATABASE_URL` | PostgreSQL connection string; enables persisted repositories | unset locally |
 
 ## Database migrations
 
@@ -54,9 +57,23 @@ for migration in migrations/*.sql; do
 done
 ```
 
-The API currently serves deterministic scoring and graph endpoints from pure packages and
-in-memory repositories. `DATABASE_URL` is reserved for the persistence adapter that maps
-the migration schema to repository implementations.
+The PostgreSQL repository mapping is exercised through a fake SQL client and route
+integration tests, not through a live database in unit CI. Run the migration and smoke
+suite against a real PostgreSQL instance during deployment verification.
+
+## API routes used by the investigation workflow
+
+- `GET /claims/:id`: claim, evidence, and latest assessment.
+- `POST /claims/:id/evidence`: add or revise reviewable claim evidence.
+- `POST /claims/:id/assessments`: create an assessment and store its input snapshot.
+- `GET /sources/:id`: source and explicit unresolved lineage gaps.
+- `GET /scenarios/:node`: server-owned snapshot bounded blast-radius result.
+
+## Rate limiting and CORS
+
+Expensive routes use a bounded in-memory fixed-window limitor. For multi-process
+deployments, terminate rate limiting at the reverse proxy or replace it with shared
+state. Browser origins are allowlisted and must be configured explicitly.
 
 ## Hardening notes
 
