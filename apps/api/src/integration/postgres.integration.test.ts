@@ -36,10 +36,7 @@ async function applyMigrations(sql: SqlClient): Promise<void> {
 
   for (const file of files) {
     const migration = readFileSync(resolve(migrationsDir, file), "utf8");
-    const statements = migration.split(";").map((statement) => statement.trim()).filter((statement) => statement.length > 0);
-    for (const statement of statements) {
-      await sql.query(statement);
-    }
+    await sql.query(migration);
   }
 }
 
