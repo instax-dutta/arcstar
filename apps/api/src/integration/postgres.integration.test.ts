@@ -184,6 +184,8 @@ describeReal("PostgreSQL repository integration", () => {
     await repos.assessments.append(assessment);
     const saved = await repos.assessments.getLatest("claim-1");
     expect(saved?.inputSnapshotRef).toBe(assessment.inputSnapshotRef);
+    expect(saved?.inputSnapshot.claim.assertedAt).toBeInstanceOf(Date);
+    expect(saved?.inputSnapshot.allSources[0]?.publishedAt).toBeInstanceOf(Date);
     expect(saved?.inputSnapshot.allSources.map((source) => source.id)).toContain("evidence-source");
     expect(saved?.score.value).toBe(assessment.score.value);
   });

@@ -13,6 +13,13 @@ interface AssessmentRow {
   input_snapshot: unknown;
 }
 
+function reviveSnapshotDates(snapshot: unknown): unknown {
+  const raw = typeof snapshot === "string" ? JSON.parse(snapshot) : snapshot;
+  return JSON.parse(JSON.stringify(raw), (key, value) =>
+    typeof value === "string" && (key === "assertedAt" || key === "publishedAt") ? new Date(value) : value,
+  );
+}
+
 export class PostgresAssessmentRepository implements AssessmentRepository {
   constructor(private readonly sql: SqlClient) {}
 
@@ -74,7 +81,7 @@ export class PostgresAssessmentRepository implements AssessmentRepository {
       explanation: row.explanation,
       assessedAt: readStoredDate(row.assessed_at, "assessed_at"),
       inputSnapshotRef: row.input_snapshot_ref,
-      inputSnapshot: row.input_snapshot,
+      inputSnapshot: reviveSnapshotDates(row.input_snapshot),
     });
   }
 }
