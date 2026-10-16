@@ -97,7 +97,7 @@ export class PostgresSourceRepository implements SourceRepository, SourceLineage
       );
 
       await tx.query(
-        `DELETE FROM source_lineage_gap WHERE unresolved_source_ref = ANY($1::text[])`,
+        `DELETE FROM source_lineage_gap WHERE unresolved_source_ref = $1`,
         [source.id],
       );
 

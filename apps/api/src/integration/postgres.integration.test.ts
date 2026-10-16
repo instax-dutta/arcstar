@@ -138,7 +138,7 @@ describeReal("PostgreSQL repository integration", () => {
         await tx.query(
           `INSERT INTO source_pool (id, publisher, source_tier, published_at, created_at, updated_at)
            VALUES ($1, $2, $3, now(), now(), now())`,
-          ["rollback-source", "Rollback", 2, new Date(0)],
+          ["rollback-source", "Rollback", 2],
         );
         throw new Error("force rollback");
       }),
